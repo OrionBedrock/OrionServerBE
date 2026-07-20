@@ -119,6 +119,12 @@ internal sealed class DimensionFacade(Dimension dimension) : IDimension
 
     public void Broadcast(IOutboundPacket packet, PacketBroadcastOptions? options = null)
     {
-        throw new NotSupportedException("IOutboundPacket broadcast adapters land in SDK step S6.");
+        BroadcastOptions? broadcastOptions = null;
+        if (options?.MaxDistance is double maxDistance)
+        {
+            broadcastOptions = new BroadcastOptions { Radius = (float)maxDistance };
+        }
+
+        dimension.Broadcast(OutboundPacketAdapter.ToDataPacket(packet), broadcastOptions);
     }
 }

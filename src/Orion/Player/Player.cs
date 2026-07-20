@@ -708,7 +708,7 @@ public readonly string Username;
     }
 
     void IPlayer.Send(params IOutboundPacket[] packets) =>
-        throw new NotSupportedException("IOutboundPacket adapters land in SDK step S6.");
+        Send(OutboundPacketAdapter.ToDataPackets(packets));
 
     void IPlayer.SetHud(ApiHudVisibility visibility, params ApiHudElement[] elements) =>
         SetHud((ProtocolHudVisibility)(int)visibility, Array.ConvertAll(elements, static e => (ProtocolHudElement)(int)e));
