@@ -1,7 +1,7 @@
 name: Publish NuGet
 
 # Auto-publish SDK packages (PluginContracts, Orion.Api, Orion.Gameplay.Api, Orion.Protocol) on main.
-# Version: optional override (must be > latest on nuget.org), else patch +0.0.1.
+# Version: optional override (must be > latest on nuget.org), else patch +0.0.1 on the highest SDK version.
 on:
   push:
     branches: [main]
@@ -71,12 +71,16 @@ jobs:
         run: dotnet test OrionServerBE.slnx -c Release --no-build --verbosity normal
 
   publish:
-    # Trusted Publishing + NUGET_USER exist only on OrionBedrock (not forks).
     if: github.repository_owner == 'OrionBedrock'
     needs: build-test
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: OrionServerBE
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: OrionServerBE
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -85,18 +89,17 @@ jobs:
 
       - name: Resolve version
         id: ver
+        working-directory: OrionServerBE
         env:
-          PACKAGE_ID: Orion.PluginContracts
           VERSION_OVERRIDE: ${{ github.event.inputs.version }}
           CSPROJ: src/PluginContracts/PluginContracts.csproj
         run: |
           set -euo pipefail
-          ID_LOWER=$(echo "$PACKAGE_ID" | tr '[:upper:]' '[:lower:]')
-          CURRENT=""
-          if INDEX=$(curl -fsSL "https://api.nuget.org/v3-flatcontainer/${ID_LOWER}/index.json" 2>/dev/null); then
-            CURRENT=$(echo "$INDEX" | jq -r '.versions[-1] // empty')
-          fi
-          echo "Latest on nuget.org: ${CURRENT:-<none>}"
+          SDK_PACKAGES="Orion.PluginContracts Orion.Api Orion.Gameplay.Api Orion.Protocol"
+
+          version_gt() {
+            [ "$(printf '%s\n%s\n' "$2" "$1" | sort -V | tail -1)" = "$1" ] && [ "$1" != "$2" ]
+          }
 
           bump_patch() {
             local v="$1"
@@ -106,10 +109,17 @@ jobs:
             echo "${major}.${minor}.$((patch + 1))"
           }
 
-          version_gt() {
-            # true if $1 > $2 (semver x.y.z)
-            [ "$(printf '%s\n%s\n' "$2" "$1" | sort -V | tail -1)" = "$1" ] && [ "$1" != "$2" ]
-          }
+          CURRENT=""
+          for PKG in $SDK_PACKAGES; do
+            ID_LOWER=$(echo "$PKG" | tr '[:upper:]' '[:lower:]')
+            if INDEX=$(curl -fsSL "https://api.nuget.org/v3-flatcontainer/${ID_LOWER}/index.json" 2>/dev/null); then
+              V=$(echo "$INDEX" | jq -r '.versions[-1] // empty')
+              if [ -n "$V" ] && { [ -z "$CURRENT" ] || version_gt "$V" "$CURRENT"; }; then
+                CURRENT="$V"
+              fi
+            fi
+          done
+          echo "Latest SDK version on nuget.org: ${CURRENT:-<none>}"
 
           if [ -n "${VERSION_OVERRIDE}" ]; then
             if [ -n "$CURRENT" ] && ! version_gt "$VERSION_OVERRIDE" "$CURRENT"; then
@@ -120,7 +130,7 @@ jobs:
             echo "Using override version: $VER"
           elif [ -z "$CURRENT" ]; then
             VER=$(grep -oP '(?<=<Version>)[^<]+' "$CSPROJ" | head -1)
-            echo "No nuget.org version; using csproj: $VER"
+            echo "No nuget.org SDK version; using csproj: $VER"
           else
             VER=$(bump_patch "$CURRENT")
             echo "Auto-bump patch: $CURRENT -> $VER"
@@ -130,6 +140,7 @@ jobs:
           echo "Resolved package version: $VER"
 
       - name: Pack SDK packages
+        working-directory: OrionServerBE
         run: |
           mkdir -p artifacts/nuget
           VER="${{ steps.ver.outputs.version }}"
@@ -145,6 +156,7 @@ jobs:
               -p:Version="$VER" \
               -p:PackageVersion="$VER"
           done
+          ls -la artifacts/nuget/
 
       - name: NuGet login (OIDC)
         uses: NuGet/login@v1
@@ -153,6 +165,7 @@ jobs:
           user: ${{ secrets.NUGET_USER }}
 
       - name: Push to nuget.org
+        working-directory: OrionServerBE
         run: |
           dotnet nuget push artifacts/nuget/*.nupkg \
             --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
