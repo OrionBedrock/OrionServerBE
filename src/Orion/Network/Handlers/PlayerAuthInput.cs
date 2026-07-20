@@ -135,7 +135,7 @@ public static class PlayerAuthInput
     private static void StartUsingItem(global::Orion.Player.Player player)
     {
         IPlayerInventoryAccess? inventory = ResolveInventory(player);
-        ItemStack? heldItem = inventory?.GetHeldItem();
+        ItemStack? heldItem = inventory?.GetHeldItem() as ItemStack;
         if (inventory is null
             || heldItem is null
             || !PluginHost.Services.TryGet(out IPlayerItemUseHandler? handler)
@@ -164,7 +164,7 @@ public static class PlayerAuthInput
         }
 
         IPlayerInventoryAccess? inventory = ResolveInventory(player);
-        ItemStack? heldItem = inventory?.Container.GetItem(pending.Slot);
+        ItemStack? heldItem = inventory?.Container.GetItem(pending.Slot) as ItemStack;
         if (inventory is null || heldItem is null || heldItem.NetworkStackId != pending.StackNetworkId)
         {
             PendingItemUses.TryRemove(player.RuntimeId, out _);
@@ -205,7 +205,7 @@ public static class PlayerAuthInput
             }
 
             IPlayerInventoryAccess? inventory = ResolveInventory(player);
-            ItemStack? item = inventory?.Container.GetItem(mineBlock.HotbarSlot);
+            ItemStack? item = inventory?.Container.GetItem(mineBlock.HotbarSlot) as ItemStack;
 
             containers.Add(new StackResponseContainerInfo
             {
@@ -368,7 +368,11 @@ public static class PlayerAuthInput
 
             if (PluginHost.Services.TryGet(out IPlayerBlockBreakHandler? breakHandler) && breakHandler is not null)
             {
-                breakHandler.OnPredictDestroy(player, position, player.LastActionFace, packet.Tick);
+                breakHandler.OnPredictDestroy(
+                    player,
+                    ToApiBlockPos(position),
+                    player.LastActionFace,
+                    packet.Tick);
             }
         }
         else if (mineBlockRequest is not null)
@@ -498,31 +502,34 @@ public static class PlayerAuthInput
         switch (action.Action)
         {
             case PlayerActionType.StartDestroyBlock:
-                handler.OnStartDestroy(player, action.BlockPos, action.Face, tick);
+                handler.OnStartDestroy(player, ToApiBlockPos(action.BlockPos), action.Face, tick);
                 break;
 
             case PlayerActionType.ContinueDestroyBlock:
-                handler.OnContinueDestroy(player, action.BlockPos, action.Face, tick);
+                handler.OnContinueDestroy(player, ToApiBlockPos(action.BlockPos), action.Face, tick);
                 break;
 
             case PlayerActionType.CrackBlock:
-                handler.OnCrack(player, action.BlockPos, action.Face, tick);
+                handler.OnCrack(player, ToApiBlockPos(action.BlockPos), action.Face, tick);
                 break;
 
             case PlayerActionType.AbortDestroyBlock:
             case PlayerActionType.StopDestroyBlock:
-                handler.OnAbortDestroy(player, action.BlockPos, action.Face);
+                handler.OnAbortDestroy(player, ToApiBlockPos(action.BlockPos), action.Face);
                 break;
 
             case PlayerActionType.PredictDestroyBlock:
-                handler.OnPredictDestroy(player, action.BlockPos, action.Face, tick);
+                handler.OnPredictDestroy(player, ToApiBlockPos(action.BlockPos), action.Face, tick);
                 break;
 
             case PlayerActionType.CreativeDestroyBlock:
-                handler.OnCreativeDestroy(player, action.BlockPos, action.Face);
+                handler.OnCreativeDestroy(player, ToApiBlockPos(action.BlockPos), action.Face);
                 break;
         }
     }
+
+    static Orion.Api.Math.BlockPos ToApiBlockPos(BlockPos position) =>
+        new(position.X, position.Y, position.Z);
 
     private static IPlayerInventoryAccess? ResolveInventory(global::Orion.Player.Player player)
     {

@@ -573,7 +573,7 @@ public readonly string Username;
     {
         if (PluginHost.Services.TryGet(out IPlayerInventoryService? inventory) && inventory is not null)
         {
-            return inventory.ResolveContainer(this, name);
+            return inventory.ResolveContainer(this, new ContainerNameWire(name)) as CoreContainer;
         }
 
         return null;
@@ -648,7 +648,7 @@ public readonly string Username;
     {
         ItemInstance heldItem = new();
         Item.ItemStack? held = PluginHost.Services.TryGet(out IPlayerInventoryService? invSvc) && invSvc is not null
-            ? invSvc.GetHeldItem(this)
+            ? invSvc.GetHeldItem(this) as Item.ItemStack
             : null;
         if (held is not null)
         {

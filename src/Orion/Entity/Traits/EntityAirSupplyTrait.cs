@@ -79,7 +79,7 @@ public sealed class EntityAirSupplyTrait : EntityTrait
             Entity,
             0.5f,
             null,
-            Entity.IsSwimming ? ActorDamageCause.Drowning : ActorDamageCause.Suffocation);
+            (int)(Entity.IsSwimming ? ActorDamageCause.Drowning : ActorDamageCause.Suffocation));
     }
 
     public int GetAirSupplyTicks()

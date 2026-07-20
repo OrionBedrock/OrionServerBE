@@ -59,7 +59,7 @@ public class ClearCommand : Command
         }
 
         int size = 0;
-        IContainer container = access.Container;
+        Orion.Containers.IContainer container = (Orion.Containers.IContainer)access.Container;
         for (int i = 0; i < container.GetSize(); i++)
         {
             size += container.GetItem(i)?.StackSize ?? 0;

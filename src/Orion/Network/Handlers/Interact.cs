@@ -48,8 +48,7 @@ public static class Interact
                 return;
             }
 
-            var heldItem = inventoryService.GetHeldItem(player);
-            if (heldItem is null || player.Dimension is null)
+            if (inventoryService.GetHeldItem(player) is not global::Orion.Item.ItemStack heldItem || player.Dimension is null)
             {
                 return;
             }

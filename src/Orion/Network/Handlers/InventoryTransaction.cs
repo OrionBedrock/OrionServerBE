@@ -131,17 +131,61 @@ public static class InventoryTransaction
             return;
         }
 
+        const byte useItemTriggerInitial = 1;
+        const byte useItemTriggerRepeat = 2;
+        const byte useItemClientPredictionPlace = 1;
+
+        if (transaction.TriggerType == useItemTriggerRepeat)
+        {
+            return;
+        }
+
+        if (transaction.TriggerType == useItemTriggerInitial
+            && transaction.ClientPrediction != useItemClientPredictionPlace
+            && player.Gamemode != Gamemode.Creative
+            && transaction.ActionType == UseItemActionClickBlock)
+        {
+            return;
+        }
+
+        Orion.Api.Math.BlockPos blockPos = new(
+            transaction.BlockPosition.X,
+            transaction.BlockPosition.Y,
+            transaction.BlockPosition.Z);
+        Orion.Api.Math.BlockPos placePos = GetPlacedBlockPosition(blockPos, transaction.BlockFace);
+        ItemStack? held = null;
+        if (PluginHost.Services.TryGet(out IPlayerInventoryService? inventory)
+            && inventory is not null
+            && inventory.TryGetAccess(player, out IPlayerInventoryAccess? access)
+            && access is not null)
+        {
+            access.SetHeldSlot(transaction.HotBarSlot);
+            held = access.GetHeldItem() as ItemStack;
+        }
+
         if (transaction.ActionType == UseItemActionClickAir)
         {
-            _ = handler.TryUseOnAir(player, transaction);
+            _ = handler.TryUseOnAir(player, held);
             return;
         }
 
         if (transaction.ActionType == UseItemActionClickBlock)
         {
-            _ = handler.TryUseOnBlock(player, transaction);
+            _ = handler.TryUseOnBlock(player, blockPos, transaction.BlockFace, placePos, held);
         }
     }
+
+    static Orion.Api.Math.BlockPos GetPlacedBlockPosition(Orion.Api.Math.BlockPos position, int face) =>
+        face switch
+        {
+            0 => new Orion.Api.Math.BlockPos(position.X, position.Y - 1, position.Z),
+            1 => new Orion.Api.Math.BlockPos(position.X, position.Y + 1, position.Z),
+            2 => new Orion.Api.Math.BlockPos(position.X, position.Y, position.Z - 1),
+            3 => new Orion.Api.Math.BlockPos(position.X, position.Y, position.Z + 1),
+            4 => new Orion.Api.Math.BlockPos(position.X - 1, position.Y, position.Z),
+            5 => new Orion.Api.Math.BlockPos(position.X + 1, position.Y, position.Z),
+            _ => position
+        };
 
     private static bool TryGetInventory(global::Orion.Player.Player player, out IPlayerInventoryAccess? inventory)
     {
@@ -175,7 +219,7 @@ public static class InventoryTransaction
             IContainer? container = null;
             if (action.WindowId == (inventory.Container.Identifier ?? 0))
             {
-                container = inventory.Container;
+                container = inventory.Container as IContainer;
             }
             else if (player.TryGetOpenContainer(action.WindowId, out IContainer? opened))
             {
@@ -293,7 +337,7 @@ public static class InventoryTransaction
                     && PluginHost.Services.TryGet(out IEntityHealthService? health)
                     && health is not null)
                 {
-                    _ = health.TryApplyDamage(target, 1f, player, ActorDamageCause.EntityAttack);
+                    _ = health.TryApplyDamage(target, 1f, player, (int)ActorDamageCause.EntityAttack);
                 }
                 break;
         }
@@ -308,7 +352,7 @@ public static class InventoryTransaction
 
         inventory.SetHeldSlot(hotBarSlot);
 
-        ItemStack? heldItem = inventory.GetHeldItem();
+        ItemStack? heldItem = inventory.GetHeldItem() as ItemStack;
         return heldItem is null || heldItem.StackSize == 0 ? null : heldItem;
     }
 

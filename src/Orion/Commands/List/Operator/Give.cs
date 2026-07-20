@@ -149,10 +149,10 @@ public class GiveCommand : Command
             access.Container.Update();
             access.SyncToPlayer(player);
             access.SyncHeldItemToClient(player);
-            ItemStack? first = access.Container.GetItem(0);
+            ItemStack? first = access.Container.GetItem(0) as ItemStack;
             for (int i = 0; i < access.Container.GetSize(); i++)
             {
-                ItemStack? slot = access.Container.GetItem(i);
+                ItemStack? slot = access.Container.GetItem(i) as ItemStack;
                 if (slot is not null && slot.Type == type)
                 {
                     first = slot;

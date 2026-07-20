@@ -43,7 +43,11 @@ public static class ItemStackRequest
         List<ItemStackResponse> responses = new(packet.Requests.Count);
         foreach (Protocol.Types.ItemStackRequest request in packet.Requests)
         {
-            if (inventory.TryProcessItemStackRequest(player, request, out ItemStackResponse response))
+            if (inventory.TryProcessItemStackRequest(
+                    player,
+                    new ItemStackRequestWire(request),
+                    out ItemStackResponseWire responseWire)
+                && responseWire.Value is ItemStackResponse response)
             {
                 responses.Add(response);
             }
@@ -74,7 +78,11 @@ public static class ItemStackRequest
     {
         if (PluginHost.Services.TryGet(out IPlayerInventoryService? inventory)
             && inventory is not null
-            && inventory.TryProcessItemStackRequest(player, request, out ItemStackResponse response))
+            && inventory.TryProcessItemStackRequest(
+                player,
+                new ItemStackRequestWire(request),
+                out ItemStackResponseWire responseWire)
+            && responseWire.Value is ItemStackResponse response)
         {
             return response;
         }
