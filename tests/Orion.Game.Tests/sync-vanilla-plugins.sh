@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# Sync Plugins-Orion/orion:* into a colon-free mirror so csc can compile ProjectReferences.
+# Sync Plugins-Orion/orion:* into a colon-free mirror so csc can compile sibling ProjectReferences.
 set -euo pipefail
 SRC="${1:?plugins root}"
 MIRROR="${2:?mirror dir}"
 BE="${3:?OrionServerBE root}"
 mkdir -p "$MIRROR"
+# NuGet feed for Orion.Api / Protocol / etc.
+cp "$SRC/nuget.config" "$MIRROR/nuget.config"
 for d in containers inventory; do
   mkdir -p "$MIRROR/orion-$d"
   rsync -a --delete \
@@ -12,7 +14,6 @@ for d in containers inventory; do
     "$SRC/orion:$d/" "$MIRROR/orion-$d/"
   sed -i 's|orion:containers|orion-containers|g; s|orion:inventory|orion-inventory|g' \
     "$MIRROR/orion-$d"/*.csproj
-  # Nearest Directory.Build.props wins; pin monorepo roots for the mirror tree.
   cat > "$MIRROR/orion-$d/Directory.Build.props" <<EOF
 <Project>
   <PropertyGroup>
@@ -23,7 +24,7 @@ for d in containers inventory; do
     <BaseOutputPath>\$(_PluginBuildRoot)bin/</BaseOutputPath>
     <OutputPath>\$(BaseOutputPath)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OrionServerBERoot>$BE</OrionServerBERoot>
+    <UseSharedCompilation>false</UseSharedCompilation>
     <PluginsSiblingRoot>$MIRROR</PluginsSiblingRoot>
   </PropertyGroup>
 </Project>
