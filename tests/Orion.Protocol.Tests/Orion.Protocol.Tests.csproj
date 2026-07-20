@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Protocol\Protocol.csproj" />
+    <ProjectReference Include="..\..\src\Binary\Binary.csproj" />
   </ItemGroup>
 
   <ItemGroup>
