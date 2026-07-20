@@ -85,11 +85,22 @@ public sealed class ApiEventsTests
     sealed class StubFoodType : IItemType
     {
         public string Identifier => "test:food";
+        public int NetworkId => 1;
+        public int MaxStackSize => 64;
     }
 
     sealed class StubFoodStack : IItemStack
     {
         public IItemType Type { get; } = new StubFoodType();
-        public int Count => 1;
+        public int Count { get; private set; } = 1;
+        public uint Metadata => 0;
+        public int NetworkStackId => 0;
+
+        public void SetCount(int count) => Count = count;
+        public void Increment(int amount = 1) => Count += amount;
+        public void Decrement(int amount = 1) => Count -= amount;
+        public bool CanStackWith(IItemStack other) =>
+            other.Type.Identifier == Type.Identifier;
+        public IItemStack Clone(int? count = null) => new StubFoodStack { Count = count ?? Count };
     }
 }

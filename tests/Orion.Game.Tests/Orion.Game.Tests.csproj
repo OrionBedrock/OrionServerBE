@@ -5,6 +5,10 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <RootNamespace>Orion.Game.Tests</RootNamespace>
+    <!-- Colon in Plugins-Orion/orion:* paths breaks csc; compile from a colon-free mirror. -->
+    <_PluginsOrionRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../../Plugins-Orion'))</_PluginsOrionRoot>
+    <_VanillaPluginsMirror Condition="'$(VanillaPluginsMirror)' == ''">$([System.IO.Path]::Combine('$(HOME)', '.cache', 'orion-vanilla-plugins-src'))</_VanillaPluginsMirror>
+    <_OrionServerBERoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../..'))</_OrionServerBERoot>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,9 +24,15 @@
     </PackageReference>
   </ItemGroup>
 
+  <Target Name="EnsureVanillaPluginsMirror" BeforeTargets="ResolveProjectReferences;Restore">
+    <Exec Command="bash '$(MSBuildThisFileDirectory)sync-vanilla-plugins.sh' '$(_PluginsOrionRoot)' '$(_VanillaPluginsMirror)' '$(_OrionServerBERoot)'" />
+  </Target>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\Orion\Orion.csproj" />
-    <ProjectReference Include="..\..\..\Plugins-Orion\orion:containers\OrionContainers.csproj" />
-    <ProjectReference Include="..\..\..\Plugins-Orion\orion:inventory\OrionInventory.csproj" />
+    <ProjectReference Include="$(_VanillaPluginsMirror)\orion-containers\OrionContainers.csproj">
+      <Aliases>PluginContainers</Aliases>
+    </ProjectReference>
+    <ProjectReference Include="$(_VanillaPluginsMirror)\orion-inventory\OrionInventory.csproj" />
   </ItemGroup>
 </Project>
