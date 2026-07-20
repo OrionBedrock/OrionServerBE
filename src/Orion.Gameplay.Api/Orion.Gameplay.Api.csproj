@@ -4,18 +4,18 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Orion.PluginContracts</RootNamespace>
-    <AssemblyName>Orion.PluginContracts</AssemblyName>
+    <RootNamespace>Orion.Gameplay</RootNamespace>
+    <AssemblyName>Orion.Gameplay.Api</AssemblyName>
     <Version>0.1.0</Version>
-    <PackageId>Orion.PluginContracts</PackageId>
+    <PackageId>Orion.Gameplay.Api</PackageId>
     <Authors>OrionBedrock</Authors>
     <Company>OrionBedrock</Company>
-    <Description>Lifecycle, registries, services, messaging, and packet pipeline contracts for Orion Bedrock plugins.</Description>
+    <Description>Gameplay service contracts for Orion Bedrock plugins (inventory, building, mining, attributes).</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/OrionBedrock/OrionServerBE</PackageProjectUrl>
     <RepositoryUrl>https://github.com/OrionBedrock/OrionServerBE</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>orion;minecraft;bedrock;plugins</PackageTags>
+    <PackageTags>orion;minecraft;bedrock;plugins;gameplay</PackageTags>
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>

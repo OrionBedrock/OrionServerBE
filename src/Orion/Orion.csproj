@@ -26,6 +26,8 @@
     <ProjectReference Include="..\RakNet\RakNet.csproj" />
     <ProjectReference Include="..\World\World.csproj" />
     <ProjectReference Include="..\PluginContracts\PluginContracts.csproj" />
+    <ProjectReference Include="..\Orion.Api\Orion.Api.csproj" />
+    <ProjectReference Include="..\Orion.Gameplay.Api\Orion.Gameplay.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>

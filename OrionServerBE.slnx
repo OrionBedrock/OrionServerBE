@@ -4,6 +4,8 @@
   <Project Path="src/Config/Config.csproj" />
   <Project Path="src/Compression/Compression.csproj" />
   <Project Path="src/PluginContracts/PluginContracts.csproj" />
+  <Project Path="src/Orion.Api/Orion.Api.csproj" />
+  <Project Path="src/Orion.Gameplay.Api/Orion.Gameplay.Api.csproj" />
   <Project Path="src/Orion/Orion.csproj" />
   <Project Path="src/Server/Server.csproj" />
   <Project Path="src/World/World.csproj" />
