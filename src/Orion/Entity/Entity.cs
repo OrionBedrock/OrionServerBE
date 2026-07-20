@@ -22,6 +22,7 @@ using Orion.Traits;
 using ApiVec3f = Orion.Api.Math.Vec3f;
 using EntitySpawnOptions = Orion.Entity.Traits.Types.EntitySpawnOptions;
 using BroadcastOptions = Orion.World.BroadcastOptions;
+using TraitOnTickDetails = Orion.Api.Traits.TraitOnTickDetails;
 
 
 

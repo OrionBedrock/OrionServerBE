@@ -1,11 +1,11 @@
 namespace Orion.Block.Traits;
 
 using System.Reflection;
+using Orion.Api.Traits;
 using Orion.Protocol.Nbt;
 using Orion.Block.Traits.Types;
 
-
-public abstract class BlockTrait
+public abstract class BlockTrait : BlockTraitBase
 {
     public static readonly string[] Types = [];
     public static readonly string[] Tags = [];
@@ -13,7 +13,8 @@ public abstract class BlockTrait
     public static readonly Type[] Components = [];
 
     protected Orion.Block.Block Block { get; }
-    public virtual string Identifier
+
+    public override string Identifier
     {
         get
         {
@@ -32,14 +33,6 @@ public abstract class BlockTrait
     protected BlockTrait(Orion.Block.Block block)
     {
         Block = block;
-    }
-
-    public virtual void OnAdd()
-    {
-    }
-
-    public virtual void OnRemove()
-    {
     }
 
     public virtual void OnRead(CompoundTag tag)
@@ -78,10 +71,3 @@ public abstract class BlockTrait
     {
     }
 }
-
-
-
-
-
-
-

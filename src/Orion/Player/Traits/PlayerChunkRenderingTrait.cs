@@ -8,7 +8,7 @@ using Orion.Block;
 using Orion.Entity.Traits;
 using Orion.Entity.Traits.Types;
 using Orion.Scheduling;
-using Orion.Traits;
+using Orion.Api.Traits;
 using Orion.World;
 using Orion.World.Block;
 using Orion.World.Coordinates;

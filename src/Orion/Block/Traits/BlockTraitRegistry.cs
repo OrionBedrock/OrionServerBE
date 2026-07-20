@@ -9,7 +9,7 @@ public static class BlockTraitRegistry
 
     public static IReadOnlyDictionary<string, Type> RegisteredTraits => Traits;
 
-    public static void RegisterFromAssembly(Assembly assembly)
+    internal static void RegisterFromAssembly(Assembly assembly)
     {
         foreach (Type type in assembly.GetTypes())
         {
@@ -22,7 +22,7 @@ public static class BlockTraitRegistry
         }
     }
 
-    public static void Register(Type traitType)
+    internal static void Register(Type traitType)
     {
         if (!typeof(BlockTrait).IsAssignableFrom(traitType))
         {

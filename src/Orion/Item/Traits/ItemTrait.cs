@@ -1,11 +1,11 @@
 namespace Orion.Item.Traits;
 
 using System.Reflection;
+using Orion.Api.Traits;
 using Orion.Protocol.Nbt;
 using Orion.Item.Traits.Types;
 
-
-public abstract class ItemTrait
+public abstract class ItemTrait : ItemTraitBase
 {
     public static readonly string[] Types = [];
     public static readonly string[] Tags = [];
@@ -13,7 +13,8 @@ public abstract class ItemTrait
     public static readonly Type[] Components = [];
 
     protected ItemStack ItemStack { get; }
-    public virtual string Identifier
+
+    public override string Identifier
     {
         get
         {
@@ -32,14 +33,6 @@ public abstract class ItemTrait
     protected ItemTrait(ItemStack itemStack)
     {
         ItemStack = itemStack;
-    }
-
-    public virtual void OnAdd()
-    {
-    }
-
-    public virtual void OnRemove()
-    {
     }
 
     public virtual void OnRead(CompoundTag tag)
@@ -74,9 +67,3 @@ public abstract class ItemTrait
     {
     }
 }
-
-
-
-
-
-

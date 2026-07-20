@@ -5,15 +5,16 @@ using Orion.Entity.Traits.Enums;
 using Orion.Entity.Traits.Types;
 using Orion.Protocol.Nbt;
 using Orion.Protocol.Enums;
+using Orion.Api.Traits;
 
 using System.Reflection;
 using Player = Orion.Player.Player;
-using Orion.Traits;
 
-public abstract class EntityTrait : Trait
+public abstract class EntityTrait : EntityTraitBase
 {
     public static readonly EntityIdentifier[] Types = [];
     public static readonly string[] Components = [];
+
     public override string Identifier
     {
         get
@@ -91,21 +92,13 @@ public abstract class EntityTrait : Trait
         OnWrite(traitTag);
     }
 
-    public abstract EntityTrait Clone(Entity entity);
-
-    public override Trait Clone(params object?[] args)
+    public virtual void OnRead(CompoundTag tag)
     {
-        if (args.Length != 1 || args[0] is not Entity entity)
-        {
-            throw new ArgumentException("EntityTrait.Clone requires exactly one Entity argument.", nameof(args));
-        }
-
-        return Clone(entity);
     }
+
+    public virtual void OnWrite(CompoundTag tag)
+    {
+    }
+
+    public abstract EntityTrait Clone(Entity entity);
 }
-
-
-
-
-
-

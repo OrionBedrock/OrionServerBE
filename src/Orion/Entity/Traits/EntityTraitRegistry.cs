@@ -23,7 +23,7 @@ public static class EntityTraitRegistry
         }
     }
 
-    public static void RegisterFromAssembly(Assembly assembly)
+    internal static void RegisterFromAssembly(Assembly assembly)
     {
         foreach (Type type in assembly.GetTypes())
         {

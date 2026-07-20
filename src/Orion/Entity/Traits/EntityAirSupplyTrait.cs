@@ -5,7 +5,7 @@ using Orion.Gameplay;
 using Orion.Plugins;
 using Orion.Protocol.Enums;
 using Orion.Protocol.Types;
-using Orion.Traits;
+using Orion.Api.Traits;
 using Orion.World;
 
 

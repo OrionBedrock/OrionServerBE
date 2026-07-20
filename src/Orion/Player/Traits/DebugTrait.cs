@@ -5,7 +5,7 @@ using Orion.Protocol.Enums;
 using Orion.Protocol.Packets;
 using Orion.Protocol.Types;
 using Orion.Scheduling;
-using Orion.Traits;
+using Orion.Api.Traits;
 
 using Entity = Orion.Entity.Entity;
 using Orion.Entity.Traits.Types;

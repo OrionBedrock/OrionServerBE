@@ -6,7 +6,7 @@ using Orion.Protocol.Enums;
 using Orion.Protocol.Packets;
 using Orion.Protocol.Types;
 using Orion.Scheduling;
-using Orion.Traits;
+using Orion.Api.Traits;
 using Orion.World;
 using Server = Orion.Server;
 
