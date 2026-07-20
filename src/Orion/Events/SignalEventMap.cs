@@ -1,6 +1,8 @@
+using Orion.Api.Events;
+
 namespace Orion.Events;
 
-/// <summary>Maps signal CLR types to <see cref="ServerEvent"/> for typed <see cref="IEventBus"/> subscribe.</summary>
+/// <summary>Maps signal CLR types to <see cref="ServerEvent"/> for typed <see cref="Orion.PluginContracts.Events.IEventBus"/> subscribe.</summary>
 public static class SignalEventMap
 {
     static readonly Dictionary<Type, ServerEvent> Map = new()
@@ -17,6 +19,19 @@ public static class SignalEventMap
         [typeof(PlayerBreakBlockSignal)] = ServerEvent.PlayerBreakBlock,
         [typeof(PlayerOpenInventorySignal)] = ServerEvent.PlayerOpenInventory,
         [typeof(PlayerOpenContainerSignal)] = ServerEvent.PlayerOpenContainer,
+        [typeof(PlayerInteractEntitySignal)] = ServerEvent.PlayerInteractEntity,
+        [typeof(PlayerItemUseSignal)] = ServerEvent.PlayerItemUse,
+        [typeof(PlayerItemUseCompleteSignal)] = ServerEvent.PlayerItemUseComplete,
+        [typeof(PlayerDropItemSignal)] = ServerEvent.PlayerDropItem,
+        [typeof(PlayerPickupItemSignal)] = ServerEvent.PlayerPickupItem,
+        [typeof(PlayerContainerCloseSignal)] = ServerEvent.PlayerContainerClose,
+        [typeof(PlayerInventorySlotChangeSignal)] = ServerEvent.PlayerInventorySlotChange,
+        [typeof(PlayerFoodEatSignal)] = ServerEvent.PlayerFoodEat,
+        [typeof(PlayerHungerChangeSignal)] = ServerEvent.PlayerHungerChange,
+        [typeof(PlayerGamemodeChangeSignal)] = ServerEvent.PlayerGamemodeChange,
+        [typeof(BlockExplodeSignal)] = ServerEvent.BlockExplode,
+        [typeof(ChunkLoadSignal)] = ServerEvent.ChunkLoad,
+        [typeof(ChunkUnloadSignal)] = ServerEvent.ChunkUnload,
     };
 
     public static ServerEvent For<TSignal>() where TSignal : ISignal => For(typeof(TSignal));

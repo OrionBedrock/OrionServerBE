@@ -4,6 +4,7 @@ using McMaster.NETCore.Plugins;
 using Orion.Config;
 using Orion.Api;
 using Orion.Api.Traits;
+using Orion.Api.Events;
 using Orion.Gameplay;
 using Orion.PluginContracts;
 using Orion.PluginContracts.Diagnostics;
@@ -190,6 +191,11 @@ public static class PluginHost
                 typeof(ICancellable),
                 typeof(EventPriority),
                 typeof(ServerEvent),
+                typeof(PlayerPlaceBlockSignal),
+                typeof(PlayerBreakBlockSignal),
+                typeof(PlayerFoodEatSignal),
+                typeof(EntityHurtSignal),
+                typeof(ServerStartSignal),
                 typeof(IContentRegistries),
                 typeof(IItemRegistry),
                 typeof(IBlockRegistry),

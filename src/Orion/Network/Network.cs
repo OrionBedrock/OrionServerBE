@@ -3,7 +3,6 @@ namespace Orion.Network;
 using System.Buffers;
 using Basalt.Binary;
 using Orion.Config;
-using Orion.Events;
 using Orion.Network.Handlers;
 using Orion.PluginContracts.Network;
 using Orion.Plugins.Network;
@@ -56,7 +55,7 @@ public sealed class NetworkHandler
         AreaPlayerPresence.ClearSession(_server, player.Dimension, session);
 
         global::Orion.Entity.Traits.Types.EntityDespawnOptions options = new(Disconnected: true);
-        _server.Emit(new PlayerLeaveSignal(player, options));
+        _server.Emit(new PlayerLeaveSignal(player));
 
         (player.Dimension?.World?.Provider ?? _server.GetWorld().Provider).SavePlayerData(player.Xuid, player.WriteToNbt());
 

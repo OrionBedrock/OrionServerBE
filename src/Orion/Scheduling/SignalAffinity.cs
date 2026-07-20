@@ -1,8 +1,10 @@
 namespace Orion.Scheduling;
 
-using Orion.Events;
+using Orion.Api.Events;
 using Orion.World.Threading;
 using WorldInstance = Orion.World.World;
+using GameplayEntity = Orion.Entity.Entity;
+using GameplayPlayer = Orion.Player.Player;
 
 /// <summary>
 /// Chooses which thread runs signal handlers. Global events
@@ -19,19 +21,19 @@ internal static class SignalAffinity
     {
         switch (signal)
         {
-            case PlayerSignal playerSignal:
-                if (playerSignal.Player.Dimension?.World is WorldInstance playerWorld)
+            case PlayerSignal playerSignal when playerSignal.Player is GameplayPlayer player:
+                if (player.Dimension?.World is WorldInstance playerWorld)
                 {
                     return playerWorld;
                 }
 
                 return playerSignal.Event == ServerEvent.PlayerSpawn ? server.GetWorld() : null;
-            case EntityHurtSignal hurtSignal:
-                return hurtSignal.Entity.Dimension?.World as WorldInstance;
-            case EntitySpawnSignal spawnSignal:
-                return spawnSignal.Entity.Dimension?.World as WorldInstance;
-            case EntityDieSignal dieSignal:
-                return dieSignal.Entity.Dimension?.World as WorldInstance;
+            case EntityHurtSignal hurtSignal when hurtSignal.Entity is GameplayEntity hurtEntity:
+                return hurtEntity.Dimension?.World as WorldInstance;
+            case EntitySpawnSignal spawnSignal when spawnSignal.Entity is GameplayEntity spawnEntity:
+                return spawnEntity.Dimension?.World as WorldInstance;
+            case EntityDieSignal dieSignal when dieSignal.Entity is GameplayEntity dieEntity:
+                return dieEntity.Dimension?.World as WorldInstance;
             default:
                 return null;
         }
@@ -46,15 +48,19 @@ internal static class SignalAffinity
 
         return signal switch
         {
-            PlayerSignal playerSignal when TryResolveAreaForEntity(playerSignal.Player, out AreaHandle playerArea) => playerArea,
-            EntityHurtSignal hurtSignal when TryResolveAreaForEntity(hurtSignal.Entity, out AreaHandle hurtArea) => hurtArea,
-            EntitySpawnSignal spawnSignal when TryResolveAreaForEntity(spawnSignal.Entity, out AreaHandle spawnArea) => spawnArea,
-            EntityDieSignal dieSignal when TryResolveAreaForEntity(dieSignal.Entity, out AreaHandle dieArea) => dieArea,
+            PlayerSignal playerSignal when playerSignal.Player is GameplayEntity playerEntity
+                && TryResolveAreaForEntity(playerEntity, out AreaHandle playerArea) => playerArea,
+            EntityHurtSignal hurtSignal when hurtSignal.Entity is GameplayEntity hurtEntity
+                && TryResolveAreaForEntity(hurtEntity, out AreaHandle hurtArea) => hurtArea,
+            EntitySpawnSignal spawnSignal when spawnSignal.Entity is GameplayEntity spawnEntity
+                && TryResolveAreaForEntity(spawnEntity, out AreaHandle spawnArea) => spawnArea,
+            EntityDieSignal dieSignal when dieSignal.Entity is GameplayEntity dieEntity
+                && TryResolveAreaForEntity(dieEntity, out AreaHandle dieArea) => dieArea,
             _ => null
         };
     }
 
-    static bool TryResolveAreaForEntity(global::Orion.Entity.Entity entity, out AreaHandle area)
+    static bool TryResolveAreaForEntity(GameplayEntity entity, out AreaHandle area)
     {
         area = default;
         if (entity.Dimension is not Dimension dimension)

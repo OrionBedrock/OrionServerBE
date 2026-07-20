@@ -1,9 +1,9 @@
 namespace Orion.Scheduling;
 
-using Orion.Events;
 using Orion.Player;
-using Orion.Entity.Traits.Types;
 using Orion.World;
+using ApiSpawnOptions = Orion.Api.EntitySpawnOptions;
+using CoreSpawnOptions = Orion.Entity.Traits.Types.EntitySpawnOptions;
 
 public static class AreaPlayerSpawnPipeline
 {
@@ -17,7 +17,7 @@ public static class AreaPlayerSpawnPipeline
         Server server,
         Player player,
         Dimension dimension,
-        out EntitySpawnOptions options)
+        out CoreSpawnOptions options)
     {
 #if DEBUG
         if (dimension.UsesAreaThreading() && dimension.World is not null)
@@ -26,7 +26,7 @@ public static class AreaPlayerSpawnPipeline
         }
 #endif
 
-        options = new EntitySpawnOptions(InitialSpawn: true);
+        options = new CoreSpawnOptions(InitialSpawn: true);
 
         if (dimension.World is null)
         {
@@ -35,14 +35,14 @@ public static class AreaPlayerSpawnPipeline
 
         WorldPlayerPresence.OnPlayerEnteredWorld(server, dimension.World);
 
-        PlayerSpawnSignal spawnSignal = new(player, options);
+        PlayerSpawnSignal spawnSignal = new(player, new ApiSpawnOptions(InitialSpawn: options.InitialSpawn));
         server.Emit(spawnSignal);
         if (!spawnSignal.Emit())
         {
             return false;
         }
 
-        options = spawnSignal.Options;
+        options = new CoreSpawnOptions(InitialSpawn: spawnSignal.Options.InitialSpawn);
         player.Spawn(dimension, options);
         return true;
     }

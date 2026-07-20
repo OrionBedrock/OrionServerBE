@@ -1,7 +1,7 @@
 namespace Orion.Network.Handlers;
 
 using Orion;
-using Orion.Events;
+using Orion.Api.Events;
 using Orion.Gameplay;
 using Orion.Item.Traits.Types;
 using Orion.Plugins;

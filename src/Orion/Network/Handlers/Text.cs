@@ -1,7 +1,6 @@
 namespace Orion.Network.Handlers;
 
 using Orion;
-using Orion.Events;
 using Orion.Player;
 using Orion.Protocol.Packets;
 using Orion.RakNet;

@@ -2,7 +2,6 @@ namespace Orion.Network.Handlers;
 
 using Basalt.Binary;
 using Orion;
-using Orion.Events;
 using Orion.Player;
 using Orion.Protocol;
 using Orion.Protocol.Enums;

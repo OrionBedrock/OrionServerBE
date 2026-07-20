@@ -105,7 +105,7 @@ public sealed class ServerHost : IDisposable
         }
 
         OrionInfo.SetCanAcceptPlayers(true);
-        server.Emit(new Events.ServerStartSignal());
+        server.Emit(new ServerStartSignal());
 
         return new ServerHost(server, scheduling);
     }
