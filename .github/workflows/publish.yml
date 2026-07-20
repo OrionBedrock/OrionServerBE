@@ -169,13 +169,27 @@ jobs:
       - name: NuGet login (OIDC)
         uses: NuGet/login@v1
         id: login
+        continue-on-error: true
         with:
           user: ${{ secrets.NUGET_USER }}
 
       - name: Push to nuget.org
         working-directory: OrionServerBE
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
+          set -euo pipefail
+          if [ -n "${NUGET_API_KEY:-}" ]; then
+            KEY="$NUGET_API_KEY"
+            echo "Using NUGET_API_KEY secret"
+          elif [ -n "${{ steps.login.outputs.NUGET_API_KEY }}" ]; then
+            KEY="${{ steps.login.outputs.NUGET_API_KEY }}"
+            echo "Using OIDC token from NuGet/login"
+          else
+            echo "::error::NuGet push requires Trusted Publishing for this repo (yPerfectBR/OrionServerBE + publish.yml) or a NUGET_API_KEY secret"
+            exit 1
+          fi
           dotnet nuget push artifacts/nuget/*.nupkg \
-            --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
+            --api-key "$KEY" \
             --source https://api.nuget.org/v3/index.json \
             --skip-duplicate
