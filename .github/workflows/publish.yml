@@ -1,12 +1,14 @@
 name: Publish NuGet
 
-# Auto-publish PluginContracts when exposed contracts change on main.
+# Auto-publish SDK packages (PluginContracts, Orion.Api, Orion.Gameplay.Api) on main.
 # Version: optional override (must be > latest on nuget.org), else patch +0.0.1.
 on:
   push:
     branches: [main]
     paths:
       - "src/PluginContracts/**"
+      - "src/Orion.Api/**"
+      - "src/Orion.Gameplay.Api/**"
   workflow_dispatch:
     inputs:
       version:
@@ -123,14 +125,21 @@ jobs:
           echo "version=${VER}" >> "$GITHUB_OUTPUT"
           echo "Resolved package version: $VER"
 
-      - name: Pack PluginContracts
+      - name: Pack SDK packages
         run: |
           mkdir -p artifacts/nuget
-          dotnet pack src/PluginContracts/PluginContracts.csproj \
-            -c Release \
-            -o artifacts/nuget \
-            -p:Version=${{ steps.ver.outputs.version }} \
-            -p:PackageVersion=${{ steps.ver.outputs.version }}
+          VER="${{ steps.ver.outputs.version }}"
+          for proj in \
+            src/PluginContracts/PluginContracts.csproj \
+            src/Orion.Api/Orion.Api.csproj \
+            src/Orion.Gameplay.Api/Orion.Gameplay.Api.csproj
+          do
+            dotnet pack "$proj" \
+              -c Release \
+              -o artifacts/nuget \
+              -p:Version="$VER" \
+              -p:PackageVersion="$VER"
+          done
 
       - name: NuGet login (OIDC)
         uses: NuGet/login@v1
