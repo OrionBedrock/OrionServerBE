@@ -5,12 +5,27 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Orion.$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
+    <Version>0.1.0</Version>
+    <PackageId>Orion.Protocol</PackageId>
+    <Authors>OrionBedrock</Authors>
+    <Company>OrionBedrock</Company>
+    <Description>Bedrock protocol packet types and codecs for Orion plugins that need the Protocol escape hatch.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/OrionBedrock/OrionServerBE</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/OrionBedrock/OrionServerBE</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>orion;minecraft;bedrock;protocol</PackageTags>
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <!-- Bundle non-packable project refs (Binary/Config/Compression) into this nupkg. -->
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Config\Config.csproj" />
-    <ProjectReference Include="..\Binary\Binary.csproj" />
-    <ProjectReference Include="..\Compression\Compression.csproj" />
+    <ProjectReference Include="..\Config\Config.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\Binary\Binary.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\Compression\Compression.csproj" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,7 +45,18 @@
     <Content Include="Data\**\*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Data\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <Pack>true</Pack>
+      <PackagePath>content\Data\%(RecursiveDir)%(Filename)%(Extension)</PackagePath>
     </Content>
   </ItemGroup>
+
+  <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="BuildOnlySettings;ResolveReferences">
+    <ItemGroup>
+      <_ReferenceCopyLocalPaths Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))" />
+    </ItemGroup>
+    <ItemGroup>
+      <BuildOutputInPackage Include="@(_ReferenceCopyLocalPaths)" TargetPath="%(_ReferenceCopyLocalPaths.DestinationSubDirectory)" />
+    </ItemGroup>
+  </Target>
 
 </Project>

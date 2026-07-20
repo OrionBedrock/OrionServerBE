@@ -1,6 +1,6 @@
 name: Publish NuGet
 
-# Auto-publish SDK packages (PluginContracts, Orion.Api, Orion.Gameplay.Api) on main.
+# Auto-publish SDK packages (PluginContracts, Orion.Api, Orion.Gameplay.Api, Orion.Protocol) on main.
 # Version: optional override (must be > latest on nuget.org), else patch +0.0.1.
 on:
   push:
@@ -9,6 +9,10 @@ on:
       - "src/PluginContracts/**"
       - "src/Orion.Api/**"
       - "src/Orion.Gameplay.Api/**"
+      - "src/Protocol/**"
+      - "src/Binary/**"
+      - "src/Config/**"
+      - "src/Compression/**"
   workflow_dispatch:
     inputs:
       version:
@@ -132,7 +136,8 @@ jobs:
           for proj in \
             src/PluginContracts/PluginContracts.csproj \
             src/Orion.Api/Orion.Api.csproj \
-            src/Orion.Gameplay.Api/Orion.Gameplay.Api.csproj
+            src/Orion.Gameplay.Api/Orion.Gameplay.Api.csproj \
+            src/Protocol/Protocol.csproj
           do
             dotnet pack "$proj" \
               -c Release \
