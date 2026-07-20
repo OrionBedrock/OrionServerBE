@@ -1,13 +1,11 @@
-namespace Orion.Events;
-
-using Orion.Player;
+namespace Orion.Api.Events;
 
 public sealed class PlayerOpenInventorySignal : PlayerSignal, ICancellable
 {
     public override ServerEvent Event => ServerEvent.PlayerOpenInventory;
     public bool Cancelled { get; private set; }
 
-    public PlayerOpenInventorySignal(Player player) : base(player)
+    public PlayerOpenInventorySignal(IPlayer player) : base(player)
     {
     }
 

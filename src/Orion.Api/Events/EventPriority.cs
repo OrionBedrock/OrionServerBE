@@ -1,4 +1,4 @@
-namespace Orion.PluginContracts.Events;
+namespace Orion.Api.Events;
 
 public enum EventPriority
 {

@@ -1,7 +1,6 @@
-namespace Orion.Events;
+using Orion.Api.Math;
 
-using Orion.Player;
-using Orion.Protocol.Types;
+namespace Orion.Api.Events;
 
 /// <summary>Emitted before opening a block/entity container UI (chest, barrel, …).</summary>
 public sealed class PlayerOpenContainerSignal : PlayerSignal, ICancellable
@@ -11,7 +10,7 @@ public sealed class PlayerOpenContainerSignal : PlayerSignal, ICancellable
     public string ContainerIdentifier { get; }
     public bool Cancelled { get; private set; }
 
-    public PlayerOpenContainerSignal(Player player, BlockPos blockPosition, string containerIdentifier)
+    public PlayerOpenContainerSignal(IPlayer player, BlockPos blockPosition, string containerIdentifier)
         : base(player)
     {
         BlockPosition = blockPosition;

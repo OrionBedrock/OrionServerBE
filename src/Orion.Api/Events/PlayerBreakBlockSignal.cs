@@ -1,7 +1,6 @@
-namespace Orion.Events;
+using Orion.Api.Math;
 
-using Orion.Player;
-using Orion.Protocol.Types;
+namespace Orion.Api.Events;
 
 public sealed class PlayerBreakBlockSignal : PlayerSignal, ICancellable
 {
@@ -10,21 +9,15 @@ public sealed class PlayerBreakBlockSignal : PlayerSignal, ICancellable
     public int BlockFace { get; }
     public bool Cancelled { get; private set; }
 
-    public PlayerBreakBlockSignal(Player player, BlockPos blockPosition, int blockFace) : base(player)
+    public PlayerBreakBlockSignal(IPlayer player, BlockPos blockPosition, int blockFace) : base(player)
     {
         BlockPosition = blockPosition;
         BlockFace = blockFace;
     }
 
-    public bool Emit()
-    {
-        return !Cancelled;
-    }
+    public bool Emit() => !Cancelled;
 
-    public void Cancel()
-    {
-        Cancelled = true;
-    }
+    public void Cancel() => Cancelled = true;
 
     internal void SetCancelled(bool cancelled) => Cancelled = cancelled;
 }

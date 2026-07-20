@@ -1,3 +1,5 @@
+using Orion.Api.Events;
+
 namespace Orion.PluginContracts.Events;
 
 public interface IEventBus

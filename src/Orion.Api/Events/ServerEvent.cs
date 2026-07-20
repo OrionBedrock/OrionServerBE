@@ -1,0 +1,30 @@
+namespace Orion.Api.Events;
+
+public enum ServerEvent : int
+{
+    ServerStart = 0,
+    EntityHurt = 1,
+    EntitySpawn = 2,
+    EntityDie = 3,
+    PlayerChat = 4,
+    PlayerJoin = 5,
+    PlayerSpawn = 6,
+    PlayerLeave = 7,
+    PlayerPlaceBlock = 8,
+    PlayerBreakBlock = 9,
+    PlayerOpenInventory = 10,
+    PlayerOpenContainer = 11,
+    PlayerInteractEntity = 12,
+    PlayerItemUse = 13,
+    PlayerItemUseComplete = 14,
+    PlayerDropItem = 15,
+    PlayerPickupItem = 16,
+    PlayerContainerClose = 17,
+    PlayerInventorySlotChange = 18,
+    PlayerFoodEat = 19,
+    PlayerHungerChange = 20,
+    PlayerGamemodeChange = 21,
+    BlockExplode = 22,
+    ChunkLoad = 23,
+    ChunkUnload = 24,
+}
