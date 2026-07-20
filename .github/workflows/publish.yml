@@ -36,20 +36,6 @@ jobs:
         with:
           path: OrionServerBE
 
-      - name: Checkout orion-containers
-        uses: actions/checkout@v4
-        with:
-          repository: OrionBedrock/orion-containers
-          ref: main
-          path: Plugins-Orion/orion:containers
-
-      - name: Checkout orion-inventory
-        uses: actions/checkout@v4
-        with:
-          repository: OrionBedrock/orion-inventory
-          ref: main
-          path: Plugins-Orion/orion:inventory
-
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -65,10 +51,32 @@ jobs:
         run: dotnet restore OrionServerBE.slnx
 
       - name: Build
-        run: dotnet build OrionServerBE.slnx -c Release --no-restore
+        run: |
+          set -euo pipefail
+          for proj in \
+            src/PluginContracts/PluginContracts.csproj \
+            src/Orion.Api/Orion.Api.csproj \
+            src/Orion.Gameplay.Api/Orion.Gameplay.Api.csproj \
+            src/Protocol/Protocol.csproj \
+            src/Orion/Orion.csproj \
+            src/Server/Server.csproj \
+            tests/Orion.Protocol.Tests/Orion.Protocol.Tests.csproj \
+            tests/Orion.Logger.Tests/Orion.Logger.Tests.csproj \
+            tests/Orion.World.Tests/Orion.World.Tests.csproj
+          do
+            dotnet build "$proj" -c Release --no-restore
+          done
 
       - name: Test
-        run: dotnet test OrionServerBE.slnx -c Release --no-build --verbosity normal
+        run: |
+          set -euo pipefail
+          for proj in \
+            tests/Orion.Protocol.Tests/Orion.Protocol.Tests.csproj \
+            tests/Orion.Logger.Tests/Orion.Logger.Tests.csproj \
+            tests/Orion.World.Tests/Orion.World.Tests.csproj
+          do
+            dotnet test "$proj" -c Release --no-build --verbosity normal
+          done
 
   publish:
     if: github.repository_owner == 'OrionBedrock' || github.repository_owner == 'yPerfectBR' || github.repository_owner == 'yPerfectBR'

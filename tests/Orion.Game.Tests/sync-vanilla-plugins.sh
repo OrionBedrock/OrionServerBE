@@ -6,7 +6,19 @@ MIRROR="${2:?mirror dir}"
 BE="${3:?OrionServerBE root}"
 mkdir -p "$MIRROR"
 # NuGet feed for Orion.Api / Protocol / etc.
-cp "$SRC/nuget.config" "$MIRROR/nuget.config"
+if [ -f "$SRC/nuget.config" ]; then
+  cp "$SRC/nuget.config" "$MIRROR/nuget.config"
+else
+  cat > "$MIRROR/nuget.config" <<'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <clear />
+    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+  </packageSources>
+</configuration>
+EOF
+fi
 for d in containers inventory; do
   mkdir -p "$MIRROR/orion-$d"
   rsync -a --delete \
