@@ -7,4 +7,8 @@ public interface IContentRegistries
     ICommandRegistry Commands { get; }
     ICreativeTabRegistry CreativeTabs { get; }
     IGeneratorRegistry Generators { get; }
+    IBlockTraitRegistry BlockTraits { get; }
+    IItemTraitRegistry ItemTraits { get; }
+    IEntityTraitRegistry EntityTraits { get; }
+    IPlayerTraitRegistry PlayerTraits { get; }
 }
