@@ -1,6 +1,5 @@
 using Orion.Block;
 using Orion.Commands;
-using Orion.Events;
 using Orion.PluginContracts;
 using Orion.PluginContracts.Registry;
 using Orion.Plugins;

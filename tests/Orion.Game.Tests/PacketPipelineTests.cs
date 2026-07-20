@@ -1,3 +1,4 @@
+using Orion.Api.Events;
 using Orion.PluginContracts;
 using Orion.PluginContracts.Events;
 using Orion.PluginContracts.Network;
