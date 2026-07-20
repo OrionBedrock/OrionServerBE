@@ -7,7 +7,7 @@ using System.Buffers.Binary;
 using System.Text;
 
 
-public sealed class BlockPermutation
+public sealed class BlockPermutation : Orion.Api.Blocks.IBlockPermutation
 {
     public static Dictionary<int, BlockPermutation> Permutations { get; } = [];
     private const string AirIdentifier = "minecraft:air";
@@ -23,6 +23,8 @@ public sealed class BlockPermutation
     // This is todo, for future components
     public BlockTypeComponentCollection Components { get; }
     public CompoundTag Nbt { get; } = new();
+
+    Orion.Api.Blocks.IBlockType Orion.Api.Blocks.IBlockPermutation.Type => Type;
 
     public bool IsComponentBased => Components.Values.Count > 0;
 

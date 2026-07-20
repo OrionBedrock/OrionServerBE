@@ -1,3 +1,4 @@
+using Orion.Api;
 using Orion.PluginContracts.Events;
 using Orion.PluginContracts.Messaging;
 using Orion.PluginContracts.Network;
@@ -9,7 +10,7 @@ namespace Orion.PluginContracts;
 public interface IPluginContext
 {
     IPluginManifest Manifest { get; }
-    IOrionServer Server { get; }
+    IServer Server { get; }
     IServiceRegistry Services { get; }
     IPluginMessenger Messenger { get; }
     IEventBus Events { get; }

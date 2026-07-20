@@ -4,7 +4,7 @@ using Orion.Block.Types;
 using Orion.Block.Traits;
 
 
-public sealed class BlockType
+public sealed class BlockType : Orion.Api.Blocks.IBlockType
 {
     private static readonly Dictionary<string, BlockType> Registry = new(StringComparer.Ordinal);
     private readonly HashSet<string> _stateSet = new(StringComparer.Ordinal);

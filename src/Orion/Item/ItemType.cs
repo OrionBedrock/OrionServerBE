@@ -7,7 +7,7 @@ using Orion.Protocol.Nbt;
 using Orion.Protocol.Types;
 
 
-public sealed class ItemType
+public sealed class ItemType : Orion.Api.Items.IItemType
 {
     private static readonly Dictionary<string, ItemType> Registry = new(StringComparer.Ordinal);
     private static readonly Dictionary<int, ItemType> NetworkRegistry = [];

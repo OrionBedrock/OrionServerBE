@@ -11,13 +11,16 @@ using Orion.Item;
 
 
 
-public sealed class Block
+public sealed class Block : Orion.Api.Blocks.IBlock
 {
     private readonly List<BlockTrait> _traits = [];
 
     public BlockType Type { get; }
     public BlockPermutation Permutation { get; private set; }
     public string Identifier => Type.Identifier;
+
+    Orion.Api.Blocks.IBlockType Orion.Api.Blocks.IBlock.Type => Type;
+    Orion.Api.Blocks.IBlockPermutation Orion.Api.Blocks.IBlock.Permutation => Permutation;
 
     public Block(BlockType type, BlockPermutation permutation)
     {

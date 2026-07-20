@@ -1,3 +1,4 @@
+using Orion.Api;
 using Orion.PluginContracts;
 using Orion.PluginContracts.Events;
 using Orion.PluginContracts.Messaging;
@@ -15,7 +16,7 @@ internal sealed class PluginLoadContext(IPluginManifest manifest, IContentRegist
 
 internal sealed class PluginContext(
     IPluginManifest manifest,
-    IOrionServer server,
+    IServer server,
     IServiceRegistry services,
     IPluginMessenger messenger,
     IEventBus events,
@@ -23,7 +24,7 @@ internal sealed class PluginContext(
     IPacketPipeline packets) : IPluginContext
 {
     public IPluginManifest Manifest { get; } = manifest;
-    public IOrionServer Server { get; } = server;
+    public IServer Server { get; } = server;
     public IServiceRegistry Services { get; } = services;
     public IPluginMessenger Messenger { get; } = messenger;
     public IEventBus Events { get; } = events;
@@ -40,7 +41,5 @@ internal sealed class WorldInitContext(
     public IOrionWorld World { get; } = world;
     public IContentRegistries Registries { get; } = registries;
 }
-
-internal sealed class StubOrionServer : IOrionServer;
 
 internal sealed class StubOrionWorld : IOrionWorld;

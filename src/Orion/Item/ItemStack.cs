@@ -5,7 +5,7 @@ using Orion.Protocol.Nbt;
 using Orion.Item.Traits;
 using Orion.Item.Traits.Types;
 
-public sealed class ItemStack {
+public sealed class ItemStack : Orion.Api.Items.IItemStack {
     private static int _nextNetworkStackId;
     private readonly List<Traits.ItemTrait> _traits = [];
 
@@ -15,6 +15,9 @@ public sealed class ItemStack {
     public uint Metadata { get; private set; }
     public int NetworkStackId { get; private set; } = ++_nextNetworkStackId;
     public ItemInstanceUserData? ExtraData { get; private set; }
+
+    Orion.Api.Items.IItemType Orion.Api.Items.IItemStack.Type => Type;
+    int Orion.Api.Items.IItemStack.Count => StackSize;
 
     public ItemStack(ItemType type, ushort stackSize = 1, uint metadata = 0, ItemInstanceUserData? extraData = null)
     {

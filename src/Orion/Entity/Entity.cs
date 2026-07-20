@@ -14,13 +14,18 @@ using Orion.World;
 using Orion.World.Threading;
 using Orion.Entity.Metadata;
 using Orion.Item;
+using Orion.Api;
+using Orion.Plugins.Api;
 
 using Player = Orion.Player.Player;
 using Orion.Traits;
+using ApiVec3f = Orion.Api.Math.Vec3f;
+using EntitySpawnOptions = Orion.Entity.Traits.Types.EntitySpawnOptions;
+using BroadcastOptions = Orion.World.BroadcastOptions;
 
 
 
-public class Entity : IAreaStoredEntity, IAreaEntity
+public class Entity : IAreaStoredEntity, IAreaEntity, IEntity
 {
     private readonly List<EntityTrait> _traits = [];
 
@@ -440,6 +445,25 @@ public class Entity : IAreaStoredEntity, IAreaEntity
     public bool IsPlayer()
     {
         return string.Equals(Identifier, EntityIdentifier.Player.ToIdentifierString(), StringComparison.Ordinal);
+    }
+
+    string IEntity.TypeIdentifier => Identifier;
+
+    IDimension? IEntity.Dimension => Dimension is null ? null : DimensionApi.For(Dimension);
+
+    ApiVec3f IEntity.Position => new(Position.X, Position.Y, Position.Z);
+
+    T? IEntity.GetTrait<T>() where T : class
+    {
+        for (int i = 0; i < _traits.Count; i++)
+        {
+            if (_traits[i] is T typed)
+            {
+                return typed;
+            }
+        }
+
+        return null;
     }
 
     public Vec3f GetHeadLocation()
