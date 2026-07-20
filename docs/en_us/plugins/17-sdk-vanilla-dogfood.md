@@ -100,6 +100,10 @@ Each step: switch csproj → fix usings → build → load smoke test.
 - Do not leave a hybrid “Vanilla still references Orion for one release” — the dogfood PR train completes the final state.
 - Sibling ProjectReferences between Vanilla plugins are fine; Orion implementation reference is not.
 
-## 9. Status
+## 9. Relation to Vanilla extraction
+
+New first-party plugins (traits, minimal content, superflat) should be born on the SDK pattern; [22](22-vanilla-extraction-overview.md)–[31](31-extraction-ai-checklist.md) moves what remains in core. This phase 17 dogfoods the **existing seven** plus any new extraction plugins until zero `Orion.csproj` refs.
+
+## 10. Status
 
 `spec`

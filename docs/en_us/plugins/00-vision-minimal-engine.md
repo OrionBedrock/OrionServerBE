@@ -92,7 +92,8 @@ Today Orion already leans DIY: curated Nature blocks, no auto-loaded plugins, sa
 |------|-------|
 | Creative tab fillers | Already sample-plugin territory |
 | Custom items/blocks/recipes | Phase 4 registries |
-| Generators / dimensions content packs | Phase 4 |
+| Generators / dimensions content packs | Phase 4; Superflat → [29](29-worldgen-superflat-plugin.md) |
+| Entity/Block/Item/Player traits + 6 native blocks | [22](22-vanilla-extraction-overview.md)–[28](28-minimal-content-and-empty-core.md) |
 | Combat, projectiles, vehicles | Prefer events; packet hooks until APIs exist |
 | Economy, permissions packs, minigames | Services + messaging |
 | Proxy/plugin messaging channels | Phase 5–6 as needed |

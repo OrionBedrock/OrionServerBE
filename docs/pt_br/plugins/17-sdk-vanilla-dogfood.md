@@ -40,6 +40,10 @@ Migrar todos os Vanilla\* para os **mesmos pacotes SDK finais** usados por terce
 - Sample deep externo carrega junto.
 - Game.Tests verde.
 
-## 6. Status
+## 6. Relação com a Extração Vanilla
+
+Novos first-party (traits, conteúdo mínimo, superflat) nascem já no padrão SDK; a série [22](22-vanilla-extraction-overview.md)–[31](31-extraction-ai-checklist.md) move o que ainda está no core. Esta fase 17 dogfooda os **7 existentes** + qualquer plugin novo da extração até zero `Orion.csproj`.
+
+## 7. Status
 
 `spec` — **auditoria jul/2026:** parcial — 7 plugins migrados para ids `orion:*`, layout `src/`, manifest v2, externalizados em `Plugins-Orion/`; `InternalsVisibleTo` removido; **pendente** `PackageReference` NuGet e zero `ProjectReference` a `Orion.csproj`.

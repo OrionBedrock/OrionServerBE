@@ -92,7 +92,8 @@ O Orion já é DIY: Nature curada, sem auto-load de plugins, fillers só no samp
 |------|-------|
 | Fillers de creative tabs | Já é território do sample |
 | Itens/blocos/receitas custom | Fase 4 |
-| Generators / conteúdo de dimensões | Fase 4 |
+| Generators / conteúdo de dimensões | Fase 4; Superflat → [29](29-worldgen-superflat-plugin.md) |
+| Traits Entity/Block/Item/Player + 6 blocos nativos | [22](22-vanilla-extraction-overview.md)–[28](28-minimal-content-and-empty-core.md) |
 | Combate, projéteis, veículos | Preferir eventos; packet hooks até haver API |
 | Economia, packs de permissão, minigames | Services + messaging |
 | Canais de proxy/plugin messaging | Fases 5–6 conforme necessário |

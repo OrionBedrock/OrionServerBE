@@ -1,8 +1,8 @@
 # Orion plugin architecture
 
-**Status:** Phases 1–7 `implemented` (McMaster + events + registries + services + packet hooks + conflicts). SDK train (09–18) remains `spec`.
+**Status:** Phases 1–7 `implemented` (McMaster + events + registries + services + packet hooks + conflicts). SDK train (09–18) remains `spec`. Vanilla extraction (22–31) remains `spec`.
 
-This hub describes how Orion becomes a **minimal Bedrock engine** whose gameplay surface grows through **third-party C# plugins**, loaded **exclusively** with **McMaster.NETCore.Plugins**, isolated by assembly load context, and coordinated through contracts, events, registries, services, messaging, and packet hooks. Deep gameplay without cloning the monorepo is specified in the **SDK series** ([09](09-sdk-overview.md)–[18](18-sdk-ai-implementation-checklist.md)).
+This hub describes how Orion becomes a **minimal Bedrock engine** whose gameplay surface grows through **third-party C# plugins**, loaded **exclusively** with **McMaster.NETCore.Plugins**, isolated by assembly load context, and coordinated through contracts, events, registries, services, messaging, and packet hooks. Deep gameplay without cloning the monorepo is specified in the **SDK series** ([09](09-sdk-overview.md)–[18](18-sdk-ai-implementation-checklist.md)). Migrating traits/content/worldgen still in core into first-party plugins is the **Vanilla extraction series** ([22](22-vanilla-extraction-overview.md)–[31](31-extraction-ai-checklist.md)).
 
 Portuguese: [`../../pt_br/plugins/README.md`](../../pt_br/plugins/README.md)
 
@@ -71,11 +71,23 @@ flowchart TB
 | 18 | [18 — AI SDK checklist](18-sdk-ai-implementation-checklist.md) | Implementation order for SDK train | `spec` |
 | 19 | [19 — Manifest v2](19-manifest-v2.md) | Object deps, SemVer ranges, fatal validation | `implemented` |
 | 20 | [20 — Plugin developer guide](20-plugin-developer-guide.md) | Authoring, troubleshooting, best practices | `implemented` |
-| 21 | [21 — Plugin repo layout](21-plugin-repo-layout.md) | `orion:*` folders, `src/`, AssemblyName | `implemented` |
+| 21 | [21 — Plugin repo layout](21-plugin-repo-layout.md) | `orion:*` folders, NuGet/CI | `implemented` |
+| 22 | [22 — Vanilla extraction overview](22-vanilla-extraction-overview.md) | Traits/content/worldgen → plugins | `spec` |
+| 23 | [23 — Extraction SDK prerequisites](23-extraction-sdk-prerequisites.md) | Orion.Api / Gameplay.Api gaps | `spec` |
+| 24 | [24 — Entity mechanics](24-entity-mechanics-plugins.md) | Gravity, collision, movement, … | `spec` |
+| 25 | [25 — Block mechanics](25-block-mechanics-plugins.md) | Direction / facing / cardinal | `spec` |
+| 26 | [26 — Item mechanics](26-item-mechanics-plugins.md) | Durability / debug | `spec` |
+| 27 | [27 — Player mechanics](27-player-mechanics-plugins.md) | Chunk rendering / debug | `spec` |
+| 28 | [28 — Minimal content](28-minimal-content-and-empty-core.md) | 6 blocks → plugin; empty core | `spec` |
+| 29 | [29 — Superflat plugin](29-worldgen-superflat-plugin.md) | Superflat out of core; void builtin | `spec` |
+| 30 | [30 — First-run void](30-first-run-and-boot-order.md) | Default void + minimum set | `spec` |
+| 31 | [31 — Extraction AI checklist](31-extraction-ai-checklist.md) | Runbook for implementing 22–30 | `spec` |
 
-**Implemented (1–7):** McMaster, lifecycle, registries, events, services/messenger, `IPacketPipeline`, conflict diagnostics. See [first-run](../first-run.md).
+**Implemented (1–7, 19–21):** McMaster, lifecycle, registries, events, services/messenger, `IPacketPipeline`, conflict diagnostics, manifest v2, layout. See [first-run](../first-run.md).
 
 **Next (SDK):** start at [09 — SDK overview](09-sdk-overview.md); implement via [18](18-sdk-ai-implementation-checklist.md).
+
+**Then (Extraction):** [22](22-vanilla-extraction-overview.md) + runbook [31](31-extraction-ai-checklist.md) (requires SDK).
 
 ## Glossary
 
