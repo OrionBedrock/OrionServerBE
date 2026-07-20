@@ -71,7 +71,7 @@ jobs:
         run: dotnet test OrionServerBE.slnx -c Release --no-build --verbosity normal
 
   publish:
-    if: github.repository_owner == 'OrionBedrock'
+    if: github.repository_owner == 'OrionBedrock' || github.repository_owner == 'yPerfectBR' || github.repository_owner == 'yPerfectBR'
     needs: build-test
     runs-on: ubuntu-latest
     defaults:
