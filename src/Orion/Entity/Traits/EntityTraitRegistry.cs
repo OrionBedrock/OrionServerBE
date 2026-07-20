@@ -1,6 +1,7 @@
 namespace Orion.Entity.Traits;
 
 using System.Reflection;
+using Orion.Api.Traits;
 using Orion.Protocol.Enums;
 
 
@@ -10,7 +11,7 @@ public static class EntityTraitRegistry
 
     public static IReadOnlyDictionary<string, Type> RegisteredTraits => Traits;
 
-    public static void Register<TTrait>() where TTrait : EntityTrait
+    public static void Register<TTrait>() where TTrait : EntityTraitBase
     {
         Register(typeof(TTrait));
     }
@@ -33,7 +34,7 @@ public static class EntityTraitRegistry
 
     public static void Register(Type traitType)
     {
-        if (traitType.IsAbstract || !typeof(EntityTrait).IsAssignableFrom(traitType))
+        if (traitType.IsAbstract || !typeof(EntityTraitBase).IsAssignableFrom(traitType))
         {
             return;
         }

@@ -16,5 +16,5 @@ namespace Orion.Api.Network;
 public static class OutboundPackets
 {
     public static IOutboundPacket FromProtocol(DataPacket packet) =>
-        new ProtocolOutboundPacket(packet);
+        new OpaqueOutboundPacket(packet);
 }

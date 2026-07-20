@@ -168,6 +168,9 @@ public sealed class NetworkHandler
             PacketReceiveContext receiveContext = new()
             {
                 Connection = new PlayerConnectionAdapter(connection),
+                Player = SessionLookup.TryGetPlayer(_server, connection, out global::Orion.Player.Player? resolved)
+                    ? resolved
+                    : null,
                 PacketId = packetIdValue,
                 Payload = packetBuffer.ToArray()
             };

@@ -17,6 +17,7 @@ using Orion.Item;
 using Orion.Api;
 using Orion.Plugins.Api;
 
+using Orion.Api.Traits;
 using Player = Orion.Player.Player;
 using Orion.Traits;
 using ApiVec3f = Orion.Api.Math.Vec3f;
@@ -28,7 +29,7 @@ using TraitOnTickDetails = Orion.Api.Traits.TraitOnTickDetails;
 
 public class Entity : IAreaStoredEntity, IAreaEntity, IEntity
 {
-    private readonly List<EntityTrait> _traits = [];
+    private readonly List<EntityTraitBase> _traits = [];
 
     Vec3f IAreaEntity.Position => Position;
 
@@ -84,14 +85,14 @@ public class Entity : IAreaStoredEntity, IAreaEntity, IEntity
         Metadata = new EntityActorMetadata(this);
         foreach (Type traitType in Type.Traits.Values)
         {
-            if (Activator.CreateInstance(traitType, this) is EntityTrait trait)
+            if (Activator.CreateInstance(traitType, this) is EntityTraitBase trait)
             {
                 AddTrait(trait);
             }
         }
     }
 
-    public T AddTrait<T>(T trait) where T : EntityTrait
+    public T AddTrait<T>(T trait) where T : EntityTraitBase
     {
         ArgumentNullException.ThrowIfNull(trait);
         if (GetTrait(trait.Identifier) is not null)
@@ -117,7 +118,7 @@ public class Entity : IAreaStoredEntity, IAreaEntity, IEntity
         return true;
     }
 
-    public T? GetTrait<T>() where T : EntityTrait
+    public T? GetTrait<T>() where T : class
     {
         for (int i = 0; i < _traits.Count; i++)
         {
@@ -130,12 +131,12 @@ public class Entity : IAreaStoredEntity, IAreaEntity, IEntity
         return null;
     }
 
-    public bool HasTrait<T>() where T : EntityTrait
+    public bool HasTrait<T>() where T : class
     {
         return GetTrait<T>() is not null;
     }
 
-    public IEnumerable<EntityTrait> GetTraits()
+    public IEnumerable<EntityTraitBase> GetTraits()
     {
         return _traits;
     }
@@ -145,7 +146,7 @@ public class Entity : IAreaStoredEntity, IAreaEntity, IEntity
         TraitOnTickDetails details = new(currentTick, deltaTick);
         for (int i = 0; i < _traits.Count; i++)
         {
-            EntityTrait trait = _traits[i];
+            EntityTraitBase trait = _traits[i];
             try
             {
                 trait.OnTick(details);
@@ -182,7 +183,7 @@ public class Entity : IAreaStoredEntity, IAreaEntity, IEntity
         dimension.AddEntity(this);
         for (int i = 0; i < _traits.Count; i++)
         {
-            _traits[i].OnSpawn(options);
+            if (_traits[i] is EntityTrait spawnTrait) spawnTrait.OnSpawn(options);
         }
 
         SetActorDataPacket actorData = CreateActorDataPacket(Dimension.World is Tickable tickable ? tickable.TickValue : 0);
@@ -225,7 +226,7 @@ public class Entity : IAreaStoredEntity, IAreaEntity, IEntity
 
         for (int i = 0; i < _traits.Count; i++)
         {
-            _traits[i].OnDespawn(options);
+            if (_traits[i] is EntityTrait despawnTrait) despawnTrait.OnDespawn(options);
         }
     }
 
@@ -260,7 +261,7 @@ public class Entity : IAreaStoredEntity, IAreaEntity, IEntity
         IsAlive = false;
         for (int i = 0; i < _traits.Count; i++)
         {
-            _traits[i].OnDeath(options);
+            if (_traits[i] is EntityTrait deathTrait) deathTrait.OnDeath(options);
         }
     }
 
@@ -280,7 +281,7 @@ public class Entity : IAreaStoredEntity, IAreaEntity, IEntity
     {
         for (int i = 0; i < _traits.Count; i++)
         {
-            _traits[i].OnTeleport(options);
+            if (_traits[i] is EntityTrait teleportTrait) teleportTrait.OnTeleport(options);
         }
     }
 
@@ -288,7 +289,7 @@ public class Entity : IAreaStoredEntity, IAreaEntity, IEntity
     {
         for (int i = 0; i < _traits.Count; i++)
         {
-            _traits[i].OnMove(options);
+            if (_traits[i] is EntityTrait moveTrait) moveTrait.OnMove(options);
         }
     }
 
@@ -296,23 +297,26 @@ public class Entity : IAreaStoredEntity, IAreaEntity, IEntity
     {
         for (int i = 0; i < _traits.Count; i++)
         {
-            _traits[i].OnInteract(player, method);
+            if (_traits[i] is EntityTrait interactTrait) interactTrait.OnInteract(player, method);
         }
     }
 
-    public void OnContainerUpdate(Orion.Containers.IContainer container)
+    public void OnContainerUpdate(Orion.Api.Containers.IContainer container)
     {
         for (int i = 0; i < _traits.Count; i++)
         {
-            _traits[i].OnContainerUpdate(container);
+            if (_traits[i] is EntityTrait containerTrait) containerTrait.OnContainerUpdate(container);
         }
     }
+
+    public void NotifyContainerUpdate(Orion.Api.Containers.IContainer container) =>
+        OnContainerUpdate(container);
 
     public void OnFallOnBlock(EntityFallOnBlockTraitEvent @event)
     {
         for (int i = 0; i < _traits.Count; i++)
         {
-            _traits[i].OnFallOnBlock(@event);
+            if (_traits[i] is EntityTrait fallTrait) fallTrait.OnFallOnBlock(@event);
         }
     }
 
@@ -320,7 +324,7 @@ public class Entity : IAreaStoredEntity, IAreaEntity, IEntity
     {
         for (int i = 0; i < _traits.Count; i++)
         {
-            _traits[i].OnRendered(options);
+            if (_traits[i] is EntityTrait renderedTrait) renderedTrait.OnRendered(options);
         }
     }
 
@@ -364,12 +368,16 @@ public class Entity : IAreaStoredEntity, IAreaEntity, IEntity
         ListTag traitsTag = new() { Name = "traits" };
         for (int i = 0; i < _traits.Count; i++)
         {
-            EntityTrait trait = _traits[i];
+            EntityTraitBase trait = _traits[i];
             CompoundTag traitEntry = new();
             traitEntry.Set("id", new StringTag { Value = trait.Identifier });
 
             CompoundTag traitData = new();
-            trait.OnWrite(root, traitData);
+            if (trait is EntityTrait writable)
+            {
+                writable.OnWrite(root, traitData);
+            }
+
             traitEntry.Set("data", traitData);
 
             traitsTag.Values.Add(traitEntry);
@@ -412,12 +420,12 @@ public class Entity : IAreaStoredEntity, IAreaEntity, IEntity
                 continue;
             }
 
-            EntityTrait? trait = GetTrait(identifier);
+            EntityTraitBase? trait = GetTrait(identifier);
             if (trait == null)
             {
                 if (EntityTraitRegistry.RegisteredTraits.TryGetValue(identifier, out Type? traitType))
                 {
-                    if (Activator.CreateInstance(traitType, this) is EntityTrait newTrait)
+                    if (Activator.CreateInstance(traitType, this) is EntityTraitBase newTrait)
                     {
                         AddTrait(newTrait);
                         trait = newTrait;
@@ -425,12 +433,15 @@ public class Entity : IAreaStoredEntity, IAreaEntity, IEntity
                 }
             }
 
-            trait?.OnRead(root, traitData);
+            if (trait is EntityTrait readable)
+            {
+                readable.OnRead(root, traitData);
+            }
         }
     }
 
 
-    public EntityTrait? GetTrait(string identifier)
+    public EntityTraitBase? GetTrait(string identifier)
     {
         for (int i = 0; i < _traits.Count; i++)
         {

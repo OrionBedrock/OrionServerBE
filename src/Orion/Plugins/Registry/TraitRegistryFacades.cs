@@ -46,13 +46,6 @@ internal sealed class BlockTraitRegistryFacade(ContentRegistriesCore core) : IBl
         {
             throw new ArgumentException($"{traitType.FullName} is not a BlockTraitBase.", nameof(traitType));
         }
-
-        if (!typeof(BlockTrait).IsAssignableFrom(traitType))
-        {
-            throw new ArgumentException(
-                $"{traitType.FullName} must subclass Orion.Block.Traits.BlockTrait until extraction completes.",
-                nameof(traitType));
-        }
     }
 }
 
@@ -86,13 +79,6 @@ internal sealed class ItemTraitRegistryFacade(ContentRegistriesCore core) : IIte
         if (!typeof(ItemTraitBase).IsAssignableFrom(traitType))
         {
             throw new ArgumentException($"{traitType.FullName} is not an ItemTraitBase.", nameof(traitType));
-        }
-
-        if (!typeof(ItemTrait).IsAssignableFrom(traitType))
-        {
-            throw new ArgumentException(
-                $"{traitType.FullName} must subclass Orion.Item.Traits.ItemTrait until extraction completes.",
-                nameof(traitType));
         }
 
         _ = pluginId;
@@ -145,13 +131,6 @@ internal sealed class EntityTraitRegistryFacade(ContentRegistriesCore core) : IE
                 nameof(traitType));
         }
 
-        if (!typeof(EntityTrait).IsAssignableFrom(traitType))
-        {
-            throw new ArgumentException(
-                $"{traitType.FullName} must subclass Orion.Entity.Traits.EntityTrait until extraction completes.",
-                nameof(traitType));
-        }
-
         _ = pluginId;
         EntityTraitRegistry.Register(traitType);
     }
@@ -192,13 +171,6 @@ internal sealed class PlayerTraitRegistryFacade(ContentRegistriesCore core) : IP
         if (!isPlayerTrait)
         {
             throw new ArgumentException($"{traitType.FullName} is not a player trait.", nameof(traitType));
-        }
-
-        if (!typeof(EntityTrait).IsAssignableFrom(traitType))
-        {
-            throw new ArgumentException(
-                $"{traitType.FullName} must subclass Orion.Player.PlayerTrait until extraction completes.",
-                nameof(traitType));
         }
 
         _ = pluginId;

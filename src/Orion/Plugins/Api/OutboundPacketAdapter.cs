@@ -15,10 +15,11 @@ internal static class OutboundPacketAdapter
         return packet switch
         {
             UpdateBlockOutbound update => ToUpdateBlock(update),
+            OpaqueOutboundPacket opaque when opaque.WirePacket is DataPacket data => data,
             ProtocolOutboundPacket protocol => protocol.Packet,
             _ => throw new NotSupportedException(
                 $"Unsupported IOutboundPacket type '{packet.GetType().FullName}'. " +
-                "Use BlockNetwork helpers or OutboundPackets.FromProtocol.")
+                "Use BlockNetwork helpers or OpaqueOutboundPacket with a DataPacket.")
         };
     }
 

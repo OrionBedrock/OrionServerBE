@@ -70,7 +70,7 @@ public abstract class EntityTrait : EntityTraitBase
         return true;
     }
 
-    public virtual void OnContainerUpdate(Orion.Containers.IContainer container)
+    public virtual void OnContainerUpdate(Orion.Api.Containers.IContainer container)
     {
     }
 
