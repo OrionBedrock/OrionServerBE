@@ -14,6 +14,7 @@ public interface IEntity
     Vec3f Position { get; }
     bool IsPlayer();
     T? GetTrait<T>() where T : class;
+    void NotifyContainerUpdate(Orion.Api.Containers.IContainer container);
 }
 
 public interface IPlayer : IEntity
@@ -36,5 +37,7 @@ public interface IPlayer : IEntity
     IReadOnlyDictionary<int, IContainer> OpenedContainers { get; }
     void RegisterOpenContainer(int windowId, IContainer container);
     bool TryGetOpenContainer(int windowId, out IContainer? container);
+    void UnregisterOpenContainer(int windowId);
+    void FlushPendingClientSync(bool force = false);
     bool HasPermission(string permission);
 }
