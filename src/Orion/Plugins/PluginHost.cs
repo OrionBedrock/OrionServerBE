@@ -3,6 +3,7 @@ using System.Runtime.Loader;
 using McMaster.NETCore.Plugins;
 using Orion.Config;
 using Orion.Api;
+using Orion.Api.Traits;
 using Orion.Gameplay;
 using Orion.PluginContracts;
 using Orion.PluginContracts.Diagnostics;
@@ -212,7 +213,15 @@ public static class PluginHost
                 typeof(IServer),
                 typeof(IPlayer),
                 typeof(IEntity),
-                typeof(GameplayApi)
+                typeof(GameplayApi),
+                typeof(BlockTraitBase),
+                typeof(ItemTraitBase),
+                typeof(EntityTraitBase),
+                typeof(PlayerTraitBase),
+                typeof(IBlockTraitRegistry),
+                typeof(IItemTraitRegistry),
+                typeof(IEntityTraitRegistry),
+                typeof(IPlayerTraitRegistry)
             ];
 
             foreach (PluginManifest manifest in ordered)

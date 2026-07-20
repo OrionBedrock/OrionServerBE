@@ -46,7 +46,15 @@ public static class BlockRegistry
     /// <summary>
     /// Queues a plugin block registration until <see cref="EnsureLoaded"/> (must be before freeze).
     /// </summary>
-    public static void RegisterPluginBlock(string identifier, int defaultStateHash, bool solid = true, bool air = false)
+    public static void RegisterPluginBlock(
+        string identifier,
+        int defaultStateHash,
+        bool solid = true,
+        bool air = false,
+        float hardness = 0f,
+        IReadOnlyList<string>? tags = null,
+        IReadOnlyList<Orion.PluginContracts.Registry.BlockStateDefinition>? states = null,
+        IReadOnlyDictionary<string, string>? components = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(identifier);
         lock (LoadLock)
@@ -57,7 +65,17 @@ public static class BlockRegistry
                     "Blocks must be registered before BlockRegistry.EnsureLoaded (plugin Load / pre-catalog).");
             }
 
-            PendingPluginBlocks.Add(new PendingBlockRegistration(identifier, defaultStateHash, solid, air));
+            PendingPluginBlocks.Add(new PendingBlockRegistration(
+                identifier,
+                defaultStateHash,
+                solid,
+                air,
+                hardness,
+                tags is null ? [] : [.. tags],
+                states is null ? [] : [.. states],
+                components is null
+                    ? []
+                    : components.Select(static kv => (kv.Key, kv.Value)).ToArray()));
         }
     }
 
@@ -74,7 +92,33 @@ public static class BlockRegistry
     {
         foreach (PendingBlockRegistration pending in PendingPluginBlocks)
         {
-            RegisterBlock(pending.Identifier, pending.DefaultStateHash, air: pending.Air, solid: pending.Solid);
+            RegisterBlock(
+                pending.Identifier,
+                pending.DefaultStateHash,
+                air: pending.Air,
+                solid: pending.Solid,
+                hardness: pending.Hardness);
+
+            BlockType? type = BlockType.Get(pending.Identifier);
+            if (type is null)
+            {
+                continue;
+            }
+
+            foreach (string tag in pending.Tags)
+            {
+                type.EnsureTag(tag);
+            }
+
+            foreach (Orion.PluginContracts.Registry.BlockStateDefinition state in pending.States)
+            {
+                type.EnsureState(state.Name);
+            }
+
+            foreach ((string key, string _) in pending.Components)
+            {
+                type.EnsureComponent(key);
+            }
         }
 
         PendingPluginBlocks.Clear();
@@ -106,5 +150,9 @@ public static class BlockRegistry
         string Identifier,
         int DefaultStateHash,
         bool Solid,
-        bool Air);
+        bool Air,
+        float Hardness,
+        string[] Tags,
+        Orion.PluginContracts.Registry.BlockStateDefinition[] States,
+        (string Key, string Value)[] Components);
 }

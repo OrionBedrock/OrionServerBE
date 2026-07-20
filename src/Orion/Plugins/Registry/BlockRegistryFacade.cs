@@ -22,6 +22,10 @@ internal sealed class BlockRegistryFacade(ContentRegistriesCore core) : IBlockRe
             registration.Identifier,
             registration.DefaultStateHash,
             solid: registration.Solid,
-            air: registration.Air);
+            air: registration.Air,
+            hardness: registration.Hardness,
+            tags: registration.Tags,
+            states: registration.States,
+            components: registration.Components);
     }
 }

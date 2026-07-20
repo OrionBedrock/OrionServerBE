@@ -24,6 +24,7 @@ public sealed class ContentRegistriesCore
     bool _blocksFrozen;
     bool _creativeFrozen;
     bool _generatorsFrozen;
+    bool _traitsFrozen;
 
     public ContentRegistriesCore()
     {
@@ -32,6 +33,10 @@ public sealed class ContentRegistriesCore
         CreativeTabs = new CreativeTabRegistryFacade(this);
         Generators = new GeneratorRegistryFacade(this);
         Commands = new CommandRegistryFacade(this);
+        BlockTraits = new BlockTraitRegistryFacade(this);
+        ItemTraits = new ItemTraitRegistryFacade(this);
+        EntityTraits = new EntityTraitRegistryFacade(this);
+        PlayerTraits = new PlayerTraitRegistryFacade(this);
     }
 
     public void SetDiagnostics(PluginDiagnostics diagnostics)
@@ -45,6 +50,10 @@ public sealed class ContentRegistriesCore
     public ICreativeTabRegistry CreativeTabs { get; }
     public IGeneratorRegistry Generators { get; }
     public ICommandRegistry Commands { get; }
+    public IBlockTraitRegistry BlockTraits { get; }
+    public IItemTraitRegistry ItemTraits { get; }
+    public IEntityTraitRegistry EntityTraits { get; }
+    public IPlayerTraitRegistry PlayerTraits { get; }
 
     public IContentRegistries ForPlugin(string pluginId) =>
         new PluginScopedContentRegistries(this, pluginId);
@@ -72,6 +81,7 @@ public sealed class ContentRegistriesCore
         lock (_sync)
         {
             _blocksFrozen = true;
+            _traitsFrozen = true;
         }
     }
 
@@ -105,6 +115,7 @@ public sealed class ContentRegistriesCore
             _creativeFrozen = false;
             _generatorsFrozen = false;
             _commandsFrozen = false;
+            _traitsFrozen = false;
             ((CommandRegistryFacade)Commands).ResetForTests();
         }
 
@@ -257,6 +268,15 @@ public sealed class ContentRegistriesCore
         }
     }
 
+    internal void ThrowIfTraitsFrozen()
+    {
+        if (_traitsFrozen || Block.BlockRegistry.IsLoaded)
+        {
+            throw new InvalidOperationException(
+                "Traits must be registered before BlockRegistry.EnsureLoaded / catalog freeze.");
+        }
+    }
+
     internal void MarkItemRegistered(string identifier)
     {
         lock (_sync)
@@ -290,6 +310,10 @@ public sealed class ContentRegistriesCore
         public ICommandRegistry Commands { get; } = new ScopedCommandRegistry(core, pluginId);
         public ICreativeTabRegistry CreativeTabs { get; } = new ScopedCreativeTabRegistry(core, pluginId);
         public IGeneratorRegistry Generators { get; } = new ScopedGeneratorRegistry(core, pluginId);
+        public IBlockTraitRegistry BlockTraits { get; } = new ScopedBlockTraitRegistry(core, pluginId);
+        public IItemTraitRegistry ItemTraits { get; } = new ScopedItemTraitRegistry(core, pluginId);
+        public IEntityTraitRegistry EntityTraits { get; } = new ScopedEntityTraitRegistry(core, pluginId);
+        public IPlayerTraitRegistry PlayerTraits { get; } = new ScopedPlayerTraitRegistry(core, pluginId);
     }
 
     sealed class ScopedItemRegistry(ContentRegistriesCore core, string pluginId) : IItemRegistry
@@ -325,5 +349,41 @@ public sealed class ContentRegistriesCore
     {
         public void Register(string name, Type generatorType) =>
             ((GeneratorRegistryFacade)core.Generators).Register(pluginId, name, generatorType);
+    }
+
+    sealed class ScopedBlockTraitRegistry(ContentRegistriesCore core, string pluginId) : IBlockTraitRegistry
+    {
+        public void RegisterFromAssembly(System.Reflection.Assembly assembly, string _) =>
+            ((BlockTraitRegistryFacade)core.BlockTraits).RegisterFromAssembly(pluginId, assembly);
+
+        public void Register(Type traitType, string _) =>
+            ((BlockTraitRegistryFacade)core.BlockTraits).Register(pluginId, traitType);
+    }
+
+    sealed class ScopedItemTraitRegistry(ContentRegistriesCore core, string pluginId) : IItemTraitRegistry
+    {
+        public void RegisterFromAssembly(System.Reflection.Assembly assembly, string _) =>
+            ((ItemTraitRegistryFacade)core.ItemTraits).RegisterFromAssembly(pluginId, assembly);
+
+        public void Register(Type traitType, string _) =>
+            ((ItemTraitRegistryFacade)core.ItemTraits).Register(pluginId, traitType);
+    }
+
+    sealed class ScopedEntityTraitRegistry(ContentRegistriesCore core, string pluginId) : IEntityTraitRegistry
+    {
+        public void RegisterFromAssembly(System.Reflection.Assembly assembly, string _) =>
+            ((EntityTraitRegistryFacade)core.EntityTraits).RegisterFromAssembly(pluginId, assembly);
+
+        public void Register(Type traitType, string _) =>
+            ((EntityTraitRegistryFacade)core.EntityTraits).Register(pluginId, traitType);
+    }
+
+    sealed class ScopedPlayerTraitRegistry(ContentRegistriesCore core, string pluginId) : IPlayerTraitRegistry
+    {
+        public void RegisterFromAssembly(System.Reflection.Assembly assembly, string _) =>
+            ((PlayerTraitRegistryFacade)core.PlayerTraits).RegisterFromAssembly(pluginId, assembly);
+
+        public void Register(Type traitType, string _) =>
+            ((PlayerTraitRegistryFacade)core.PlayerTraits).Register(pluginId, traitType);
     }
 }
