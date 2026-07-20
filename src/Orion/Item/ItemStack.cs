@@ -18,6 +18,21 @@ public sealed class ItemStack : Orion.Api.Items.IItemStack {
 
     Orion.Api.Items.IItemType Orion.Api.Items.IItemStack.Type => Type;
     int Orion.Api.Items.IItemStack.Count => StackSize;
+    uint Orion.Api.Items.IItemStack.Metadata => Metadata;
+    int Orion.Api.Items.IItemStack.NetworkStackId => NetworkStackId;
+
+    void Orion.Api.Items.IItemStack.SetCount(int count) => SetStackSize((ushort)Math.Clamp(count, 0, ushort.MaxValue));
+
+    void Orion.Api.Items.IItemStack.Increment(int amount) => IncrementStack((ushort)Math.Clamp(amount, 0, ushort.MaxValue));
+
+    void Orion.Api.Items.IItemStack.Decrement(int amount) => DecrementStack((ushort)Math.Clamp(amount, 0, ushort.MaxValue));
+
+    bool Orion.Api.Items.IItemStack.CanStackWith(Orion.Api.Items.IItemStack other) =>
+        other is ItemStack stack && CanStackWith(stack);
+
+    Orion.Api.Items.IItemStack Orion.Api.Items.IItemStack.Clone(int? count) =>
+        Clone(count is null ? null : (ushort)Math.Clamp(count.Value, 0, ushort.MaxValue));
+
 
     public ItemStack(ItemType type, ushort stackSize = 1, uint metadata = 0, ItemInstanceUserData? extraData = null)
     {
@@ -28,9 +43,17 @@ public sealed class ItemStack : Orion.Api.Items.IItemStack {
 
         foreach (Type traitType in Type.Traits.Values)
         {
-            if (Activator.CreateInstance(traitType, this) is Traits.ItemTrait trait)
+            object? created = Activator.CreateInstance(traitType, this);
+            if (created is Traits.ItemTrait trait)
             {
                 AddTrait(trait);
+            }
+            else if (created is Orion.Api.Traits.ItemTraitBase)
+            {
+                // Plugin traits that only subclass ItemTraitBase are tracked via Type.Traits
+                // for registration; host ItemStack currently only hosts ItemTrait instances.
+                // ItemTraitBase-only plugins should use gameplay services instead of stack traits
+                // until full TraitBase hosting lands.
             }
         }
     }

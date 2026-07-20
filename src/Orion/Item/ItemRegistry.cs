@@ -74,6 +74,7 @@ public static class ItemRegistry
             LoadCreativeItems();
             ItemTraitRegistry.RegisterFromAssembly(Assembly.GetExecutingAssembly());
             WarnIfCreativeTabsSparse();
+            Orion.Api.Items.Items.SetFactory(new ItemStackFactory());
             _loaded = true;
         }
     }
