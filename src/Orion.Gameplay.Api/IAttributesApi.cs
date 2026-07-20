@@ -1,3 +1,5 @@
+using Orion.Api;
+
 namespace Orion.Gameplay;
 
 /// <summary>
@@ -12,5 +14,5 @@ public interface IAttributesApi
     /// <summary>
     /// Reveal health/hunger HUD after the core default-hides vitals on join.
     /// </summary>
-    void EnableHud(global::Orion.Player.Player player);
+    void EnableHud(IPlayer player);
 }

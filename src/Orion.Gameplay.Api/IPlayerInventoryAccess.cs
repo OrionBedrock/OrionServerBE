@@ -1,5 +1,6 @@
-using Orion.Containers;
-using Orion.Item;
+using Orion.Api;
+using Orion.Api.Containers;
+using Orion.Api.Items;
 
 namespace Orion.Gameplay;
 
@@ -14,11 +15,11 @@ public interface IPlayerInventoryAccess
 
     void SetHeldSlot(int slot);
 
-    ItemStack? GetHeldItem();
+    IItemStack? GetHeldItem();
 
     void Clear();
 
-    void SyncToPlayer(global::Orion.Player.Player player);
+    void SyncToPlayer(IPlayer player);
 
-    void SyncHeldItemToClient(global::Orion.Player.Player player);
+    void SyncHeldItemToClient(IPlayer player);
 }

@@ -1,3 +1,5 @@
+using Orion.Api;
+
 namespace Orion.Gameplay;
 
 /// <summary>
@@ -6,21 +8,21 @@ namespace Orion.Gameplay;
 public interface IPlayerHungerService
 {
     bool TryEat(
-        global::Orion.Player.Player player,
+        IPlayer player,
         int nutrition,
         float saturationModifier,
         bool canAlwaysEat);
 
-    bool TryAddExhaustion(global::Orion.Player.Player player, float amount);
+    bool TryAddExhaustion(IPlayer player, float amount);
 
     bool TryGet(
-        global::Orion.Player.Player player,
+        IPlayer player,
         out float hunger,
         out float saturation,
         out float exhaustion);
 
     bool TrySetHunger(
-        global::Orion.Player.Player player,
+        IPlayer player,
         float hunger,
         float? saturation = null);
 }
