@@ -278,7 +278,7 @@ public sealed class DimensionConfig
     public int Type { get; init; }
 
     [JsonPropertyName("generator")]
-    public string Generator { get; init; } = "superflat";
+    public string Generator { get; init; } = "void";
 
     [JsonPropertyName("viewDistance")]
     public int ViewDistance { get; init; } = 20;

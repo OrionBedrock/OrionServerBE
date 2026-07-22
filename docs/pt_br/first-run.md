@@ -2,6 +2,21 @@
 
 Orion inicia com menu criativo **vazio** e **sem** blocos nativos de conteúdo. Nature, Construction, Equipment e Items ficam vazios até um plugin registrar (tipicamente `orion:minimal-items`).
 
+## Gerador de mundo (default: void)
+
+Mundos novos usam o generator **`void`** (chunks vazios). Spawn padrão: `[0, -57, 0]`. Ids desconhecidos também caem em void — o core não inclui mais superflat builtin.
+
+Para terreno plano (bedrock / dirt / grass em Y −64…−60):
+
+1. Ative plugins e faça deploy de `orion:minimal-items` + `orion:superflat` (superflat depende de minimal-items para os ids de bloco).
+2. Configure o generator da dimensão overworld:
+
+```json
+"generator": "superflat"
+```
+
+Sem o plugin, `generator: "superflat"` sobe o servidor mas gera terreno **void** (sem crash).
+
 ## Menu criativo vazio
 
 O Bedrock pode mostrar o inventário criativo **inteiro** vazio quando Construction / Equipment / Items não têm itens. É limitação da UI do cliente.

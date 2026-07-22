@@ -6,13 +6,20 @@ using Orion.World.Provider;
 
 namespace Orion.World.Tests;
 
+[Collection("GeneratorFactory")]
 public sealed class ChunkPregeneratorTests
 {
+    public ChunkPregeneratorTests()
+    {
+        GeneratorFactory.ResetForTests();
+    }
+
     [Fact]
     public void Pregenerate_MemoryLock_KeepsChunksInCache()
     {
+        GeneratorFactory.Register("superflat", typeof(TestSuperFlatWorldGenerator));
         using InMemoryProvider provider = new();
-        Dimension dimension = new("overworld", DimensionType.Overworld, provider, new SuperFlatGenerator());
+        Dimension dimension = new("overworld", DimensionType.Overworld, provider, GeneratorFactory.Create("superflat"));
         ChunkPregenerator pregenerator = new();
 
         pregenerator.Pregenerate(dimension, new ChunkPregenerationConfig
@@ -30,8 +37,9 @@ public sealed class ChunkPregeneratorTests
     [Fact]
     public void Pregenerate_WithoutMemoryLock_UnloadsAfterSave()
     {
+        GeneratorFactory.Register("superflat", typeof(TestSuperFlatWorldGenerator));
         using InMemoryProvider provider = new();
-        Dimension dimension = new("overworld", DimensionType.Overworld, provider, new SuperFlatGenerator());
+        Dimension dimension = new("overworld", DimensionType.Overworld, provider, GeneratorFactory.Create("superflat"));
         ChunkPregenerator pregenerator = new();
 
         pregenerator.Pregenerate(dimension, new ChunkPregenerationConfig

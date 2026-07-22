@@ -1,3 +1,4 @@
+using Orion.Api.Worldgen;
 using Orion.PluginContracts.Registry;
 using Orion.World.Generation;
 
@@ -13,6 +14,13 @@ internal sealed class GeneratorRegistryFacade(ContentRegistriesCore core) : IGen
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentNullException.ThrowIfNull(generatorType);
         core.ThrowIfGeneratorsFrozen();
+
+        if (!typeof(WorldGeneratorBase).IsAssignableFrom(generatorType) || generatorType.IsAbstract)
+        {
+            throw new ArgumentException(
+                $"Generator type '{generatorType.FullName}' must be a concrete subclass of {nameof(WorldGeneratorBase)}.",
+                nameof(generatorType));
+        }
 
         if (!core.TryClaimGenerator(pluginId, name))
         {

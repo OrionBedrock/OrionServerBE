@@ -1,6 +1,6 @@
 # Fase 30 — First-run, void e ordem de boot
 
-**Status:** `spec`  
+**Status:** `implemented`  
 **Language twin:** [`../../en_us/plugins/30-first-run-and-boot-order.md`](../../en_us/plugins/30-first-run-and-boot-order.md)  
 **Depende de:** [22](22-vanilla-extraction-overview.md), [28](28-minimal-content-and-empty-core.md), [29](29-worldgen-superflat-plugin.md)
 
@@ -52,11 +52,11 @@ Sem `Co-authored-by`.
 
 ## 7. Acceptance tests
 
-- [ ] `first-run.sh` produz `generator: void`.
-- [ ] CI fixtures usam void (Logger.Tests / Game.Tests ainda passam — ajustar fixtures se dependiam de camadas superflat).
-- [ ] Doc first-run lista plugins e como ativar superflat.
+- [x] `first-run.sh` produz `generator: void`.
+- [x] CI fixtures usam void (Logger.Tests / Game.Tests ainda passam — ajustar fixtures se dependiam de camadas superflat).
+- [x] Doc first-run lista plugins e como ativar superflat.
 - [ ] Boot void + minimal-items + chunk-rendering permite join.
 
 ## 8. Status
 
-`spec`
+`implemented` (2026-07-21). Generator default é `void`; ative `orion:superflat` + `generator: superflat` para camadas planas.

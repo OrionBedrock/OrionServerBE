@@ -1,3 +1,5 @@
+using Orion.Api.Worldgen;
+
 namespace Orion.World.Generation;
 
 public static class GeneratorFactory
@@ -22,10 +24,10 @@ public static class GeneratorFactory
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentNullException.ThrowIfNull(generatorType);
 
-        if (!typeof(Generator).IsAssignableFrom(generatorType) || generatorType.IsAbstract)
+        if (!typeof(WorldGeneratorBase).IsAssignableFrom(generatorType) || generatorType.IsAbstract)
         {
             throw new ArgumentException(
-                $"Generator type '{generatorType.FullName}' must be a concrete subclass of {nameof(Generator)}.",
+                $"Generator type '{generatorType.FullName}' must be a concrete subclass of {nameof(WorldGeneratorBase)}.",
                 nameof(generatorType));
         }
 
@@ -41,7 +43,7 @@ public static class GeneratorFactory
             if (_frozen)
             {
                 throw new InvalidOperationException(
-                    "Generators must be registered before world bootstrap (plugin Load / OnEnable).");
+                    "Generators must be registered before world bootstrap (plugin Load).");
             }
 
             PluginGenerators[name] = generatorType;
@@ -62,13 +64,13 @@ public static class GeneratorFactory
         {
             if (PluginGenerators.TryGetValue(identifier, out Type? type))
             {
-                return (Generator)Activator.CreateInstance(type)!;
+                WorldGeneratorBase api = (WorldGeneratorBase)Activator.CreateInstance(type)!;
+                return new ApiGeneratorAdapter(api);
             }
         }
 
         return identifier.ToLowerInvariant() switch
         {
-            "superflat" => new SuperFlatGenerator(),
             "void" => new VoidGenerator(),
             _ => new VoidGenerator()
         };

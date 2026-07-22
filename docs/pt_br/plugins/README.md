@@ -78,9 +78,9 @@ flowchart TB
 | 25 | [25 — Mecânicas Block](25-block-mechanics-plugins.md) | Direction / facing / cardinal | `spec` |
 | 26 | [26 — Mecânicas Item](26-item-mechanics-plugins.md) | Durability / debug | `spec` |
 | 27 | [27 — Mecânicas Player](27-player-mechanics-plugins.md) | Chunk rendering / debug | `spec` |
-| 28 | [28 — Conteúdo mínimo](28-minimal-content-and-empty-core.md) | 6 blocos → plugin; core vazio | `spec` |
-| 29 | [29 — Superflat plugin](29-worldgen-superflat-plugin.md) | Superflat fora do core; void builtin | `spec` |
-| 30 | [30 — First-run void](30-first-run-and-boot-order.md) | Default void + set mínimo | `spec` |
+| 28 | [28 — Conteúdo mínimo](28-minimal-content-and-empty-core.md) | 6 blocos → plugin; core vazio | `implemented` |
+| 29 | [29 — Superflat plugin](29-worldgen-superflat-plugin.md) | Superflat fora do core; void builtin | `implemented` |
+| 30 | [30 — First-run void](30-first-run-and-boot-order.md) | Default void + set mínimo | `implemented` |
 | 31 | [31 — Checklist IA extração](31-extraction-ai-checklist.md) | Runbook de implementação 22–30 | `spec` |
 
 **Implementado (1–7, 19–21):** McMaster, lifecycle, registries, events, services/messenger, `IPacketPipeline`, diagnostics de conflitos, manifest v2, layout. Ver [first-run](../first-run.md).

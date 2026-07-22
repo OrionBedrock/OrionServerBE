@@ -2,6 +2,21 @@
 
 Orion starts with an **empty** creative menu and **no** native content blocks. Nature, Construction, Equipment, and Items stay empty until a plugin registers them (typically `orion:minimal-items`).
 
+## World generator (default: void)
+
+New worlds use generator **`void`** (empty chunks). Default spawn is `[0, -57, 0]`. Unknown generator ids also fall back to void — the core no longer ships a builtin superflat.
+
+To get flat terrain (bedrock / dirt / grass at Y −64…−60):
+
+1. Enable plugins and deploy `orion:minimal-items` + `orion:superflat` (superflat depends on minimal-items for block ids).
+2. Set the overworld dimension generator:
+
+```json
+"generator": "superflat"
+```
+
+Without the plugin, `generator: "superflat"` still boots but yields **void** terrain (no crash).
+
 ## Empty creative menu
 
 Bedrock often shows the **entire** creative inventory as empty when Construction / Equipment / Items have no items. That is a client UI constraint.

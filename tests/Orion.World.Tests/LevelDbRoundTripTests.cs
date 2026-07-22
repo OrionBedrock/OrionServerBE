@@ -6,15 +6,22 @@ using ChunkColumn = Orion.World.Chunk.Chunk;
 
 namespace Orion.World.Tests;
 
+[Collection("GeneratorFactory")]
 public sealed class LevelDbRoundTripTests
 {
+    public LevelDbRoundTripTests()
+    {
+        GeneratorFactory.ResetForTests();
+    }
+
     [Fact]
     public void LevelDb_RoundTrip_PreservesChunk()
     {
         string path = CreateTempDbPath();
         using LevelDbProvider provider = new(path);
 
-        SuperFlatGenerator generator = new();
+        GeneratorFactory.Register("superflat", typeof(TestSuperFlatWorldGenerator));
+        Generator generator = GeneratorFactory.Create("superflat");
         ChunkColumn chunk = generator.Generate(DimensionType.Overworld, 4, 8);
         provider.SaveChunk(chunk);
 

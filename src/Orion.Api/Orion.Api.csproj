@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>Orion.Api</RootNamespace>
     <AssemblyName>Orion.Api</AssemblyName>
-    <Version>0.1.4</Version>
+    <Version>0.1.5</Version>
     <PackageId>Orion.Api</PackageId>
     <Authors>OrionBedrock</Authors>
     <Company>OrionBedrock</Company>
