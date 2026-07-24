@@ -75,7 +75,8 @@ public static class ResourcePackClientResponseHandler
             session,
             context.World!,
             context.Regionizer!,
-            dimConfig);
+            dimConfig,
+            context.Permissions);
 
         PlayerSpawnPipeline.SendSpawnSequence(context, player);
 

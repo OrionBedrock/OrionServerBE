@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using Orion.Config;
 using Orion.Network;
+using Orion.Permissions;
 using Orion.Region;
 using Orion.World;
 using EntityHandle = Orion.Entity.Entity;
@@ -22,7 +23,8 @@ public sealed class PlayerManager
         ConnectionSession session,
         Orion.World.World world,
         Regionizer regionizer,
-        DimensionConfig dimensionConfig)
+        DimensionConfig dimensionConfig,
+        PermissionService? permissions = null)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(world);
@@ -49,6 +51,9 @@ public sealed class PlayerManager
         var entity = new EntityHandle(id, dimension, chunkX, chunkZ, world.Identifier);
         var player = new Player(entity, session, regionizer, x, y, z);
         player.EnableSimulationTickets(Math.Max(0, dimensionConfig.SimulationDistance));
+
+        PermissionService service = permissions ?? PermissionService.CreateEmpty();
+        player.ApplyPermissions(service.Resolve(session.Username, session.Xuid));
 
         _byConnection[session.Connection] = player;
         _byId[id] = player;

@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using Orion.Entity.Traits;
 using Orion.Network;
+using Orion.Permissions;
 using Orion.Player.Traits;
 using Orion.Region;
 using Orion.World;
@@ -9,13 +10,14 @@ using EntityHandle = Orion.Entity.Entity;
 namespace Orion.Player;
 
 /// <summary>
-/// Session-bound player: entity + connection. Streaming trait arrives in later Phase 09 commits.
+/// Session-bound player: entity + connection + permissions.
 /// </summary>
 public sealed class Player
 {
     private readonly ConcurrentQueue<Action> _regionMailbox = new();
     private int _viewDistanceChebyshev = 8;
     private Action<int>? _viewDistanceApplied;
+    private ResolvedPermissions _permissions = new(isOperator: false, nodes: []);
 
     public Player(
         EntityHandle entity,
@@ -61,9 +63,15 @@ public sealed class Player
 
     public bool IsRemoved => Entity.IsRemoved;
 
-    /// <summary>
-    /// Folia: enqueue work for the owning region tick (not RakNet I/O).
-    /// </summary>
+    public bool IsOperator => _permissions.IsOperator;
+
+    public void ApplyPermissions(ResolvedPermissions permissions)
+    {
+        _permissions = permissions ?? throw new ArgumentNullException(nameof(permissions));
+    }
+
+    public bool HasPermission(string node) => _permissions.Has(node);
+
     public void EnqueueOnRegion(Action work)
     {
         ArgumentNullException.ThrowIfNull(work);
@@ -89,9 +97,6 @@ public sealed class Player
     internal void BindViewDistanceListener(Action<int> listener)
         => _viewDistanceApplied = listener ?? throw new ArgumentNullException(nameof(listener));
 
-    /// <summary>
-    /// Drain mailbox + region scheduler under temporary ownership.
-    /// </summary>
     public void TickRegion()
     {
         if (IsRemoved)

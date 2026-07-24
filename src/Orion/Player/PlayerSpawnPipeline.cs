@@ -82,7 +82,7 @@ public static class PlayerSpawnPipeline
             ExperimentsPreviouslyToggled = false,
             BonusChestEnabled = false,
             StartWithMapEnabled = false,
-            PlayerPermissions = 1,
+            PlayerPermissions = player.IsOperator ? 2 : 1,
             ServerChunkTickRadius = 4,
             HasLockedBehaviourPack = false,
             HasLockedTexturePack = false,

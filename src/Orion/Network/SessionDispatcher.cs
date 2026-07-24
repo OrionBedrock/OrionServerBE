@@ -1,5 +1,7 @@
 using Orion.Config;
+using Orion.Network;
 using Orion.Network.Handlers;
+using Orion.Permissions;
 using Orion.Player;
 using Orion.Protocol.Enums;
 using Orion.Protocol.Io;
@@ -22,7 +24,8 @@ public sealed class ServerContext
         SessionWorkQueue work,
         PlayerManager? players = null,
         Orion.World.World? world = null,
-        Regionizer? regionizer = null)
+        Regionizer? regionizer = null,
+        PermissionService? permissions = null)
     {
         Config = config;
         Sessions = sessions;
@@ -32,6 +35,7 @@ public sealed class ServerContext
         Players = players;
         World = world;
         Regionizer = regionizer;
+        Permissions = permissions;
     }
 
     public OrionConfig Config { get; }
@@ -42,6 +46,7 @@ public sealed class ServerContext
     public PlayerManager? Players { get; set; }
     public Orion.World.World? World { get; set; }
     public Regionizer? Regionizer { get; set; }
+    public PermissionService? Permissions { get; set; }
 }
 
 /// <summary>
@@ -110,6 +115,14 @@ public sealed class SessionDispatcher
 
             case PacketId.RequestChunkRadius:
                 RequestChunkRadiusHandler.Handle(_context, session, (RequestChunkRadiusPacket)packet);
+                break;
+
+            case PacketId.PlayerAuthInput:
+                PlayerAuthInputHandler.Handle(_context, session, (PlayerAuthInputPacket)packet);
+                break;
+
+            case PacketId.InventoryTransaction:
+                InventoryTransactionHandler.Handle(_context, session, (InventoryTransactionPacket)packet);
                 break;
         }
     }

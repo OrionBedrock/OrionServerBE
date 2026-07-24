@@ -1,5 +1,6 @@
 using Orion.Config;
 using Orion.Network;
+using Orion.Permissions;
 using Orion.Player;
 using Orion.Player.Traits;
 using Orion.Region;
@@ -26,6 +27,7 @@ public sealed class Server : IAsyncDisposable
     private Orion.World.World? _world;
     private GeneratorRegistry? _generators;
     private WorldPersistence? _persistence;
+    private PermissionService? _permissions;
     private PacketSender? _sender;
     private ServerContext? _context;
     private SessionDispatcher? _dispatcher;
@@ -51,6 +53,8 @@ public sealed class Server : IAsyncDisposable
 
     public PlayerManager Players => _players;
 
+    public PermissionService? Permissions => _permissions;
+
     public GlobalRegion GlobalRegion => _globalRegion;
 
     public GlobalRegionScheduler GlobalScheduler => _globalScheduler;
@@ -64,6 +68,7 @@ public sealed class Server : IAsyncDisposable
     public OrionThreadPools? ThreadPools => _threadPools;
 
     public ThreadPoolBudget? ThreadBudget => _threadPools?.Budget;
+
 
     public async ValueTask StartAsync(CancellationToken cancellationToken = default)
     {
@@ -110,6 +115,7 @@ public sealed class Server : IAsyncDisposable
 
         _sender = new PacketSender(_config);
         PacketSendGate.Bind(_sender);
+        _permissions = LoadPermissions(_config.Server.Orion.Permissions);
         _context = new ServerContext(
             _config,
             _sessions,
@@ -118,7 +124,8 @@ public sealed class Server : IAsyncDisposable
             _workQueue,
             _players,
             _world,
-            _regionizer);
+            _regionizer,
+            _permissions);
         _dispatcher = new SessionDispatcher(_context);
 
         _raknet = new NetworkServer(options);
@@ -169,6 +176,7 @@ public sealed class Server : IAsyncDisposable
         _world = null;
         _persistence = null;
         _generators = null;
+        _permissions = null;
 
         _raknet?.Stop();
         _raknet?.Dispose();
@@ -196,5 +204,17 @@ public sealed class Server : IAsyncDisposable
         _raknet?.Tick();
         _dispatcher?.Drain();
         _players.TickAllRegions();
+    }
+
+    private static PermissionService LoadPermissions(string path)
+    {
+        try
+        {
+            return PermissionService.Load(path);
+        }
+        catch (FileNotFoundException)
+        {
+            return PermissionService.CreateEmpty();
+        }
     }
 }
