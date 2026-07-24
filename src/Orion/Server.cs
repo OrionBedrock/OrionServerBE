@@ -1,4 +1,5 @@
 using Orion.Config;
+using Orion.Entity.Animation;
 using Orion.Network;
 using Orion.Permissions;
 using Orion.Player;
@@ -31,6 +32,7 @@ public sealed class Server : IAsyncDisposable
     private PlayerPersistence? _playerPersistence;
     private PermissionService? _permissions;
     private ServerRegistries? _registries;
+    private AnimationControllerRegistry? _animationControllers;
     private PacketSender? _sender;
     private ServerContext? _context;
     private SessionDispatcher? _dispatcher;
@@ -59,6 +61,8 @@ public sealed class Server : IAsyncDisposable
     public PermissionService? Permissions => _permissions;
 
     public ServerRegistries? Registries => _registries;
+
+    public AnimationControllerRegistry? AnimationControllers => _animationControllers;
 
     public GlobalRegion GlobalRegion => _globalRegion;
 
@@ -126,6 +130,7 @@ public sealed class Server : IAsyncDisposable
         PacketSendGate.Bind(_sender);
         _permissions = LoadPermissions(_config.Server.Orion.Permissions);
         _registries = ServerRegistries.CreateMinimal();
+        _animationControllers = new AnimationControllerRegistry();
         _context = new ServerContext(
             _config,
             _sessions,
@@ -191,6 +196,8 @@ public sealed class Server : IAsyncDisposable
         _persistence = null;
         _generators = null;
         _permissions = null;
+        _animationControllers = null;
+        _registries = null;
 
         _raknet?.Stop();
         _raknet?.Dispose();
