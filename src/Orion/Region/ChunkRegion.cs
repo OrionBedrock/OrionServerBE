@@ -51,6 +51,19 @@ public sealed class ChunkRegion
         return true;
     }
 
+    /// <summary>
+    /// Marks ticking and enters ownership scope for the current thread until disposed.
+    /// </summary>
+    public IDisposable? TryMarkTickingWithOwnership()
+    {
+        if (!TryMarkTicking())
+        {
+            return null;
+        }
+
+        return RegionOwnership.Enter(this);
+    }
+
     public void MarkNotTicking()
     {
         if (State != RegionState.Ticking)

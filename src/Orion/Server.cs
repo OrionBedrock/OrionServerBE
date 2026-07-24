@@ -13,6 +13,7 @@ public sealed class Server : IAsyncDisposable
     private readonly SessionPacketQueue _packetQueue = new();
     private readonly SessionWorkQueue _workQueue = new();
     private readonly GlobalRegion _globalRegion = new();
+    private Regionizer? _regionizer;
     private PacketSender? _sender;
     private ServerContext? _context;
     private SessionDispatcher? _dispatcher;
@@ -36,6 +37,11 @@ public sealed class Server : IAsyncDisposable
     public SessionManager Sessions => _sessions;
 
     public GlobalRegion GlobalRegion => _globalRegion;
+
+    /// <summary>
+    /// Chunk section regionizer (idle until world/tickets land in later phases).
+    /// </summary>
+    public Regionizer? Regionizer => _regionizer;
 
     public ThreadPoolBudget? ThreadBudget => _threadPools?.Budget;
 
@@ -62,6 +68,7 @@ public sealed class Server : IAsyncDisposable
         var budget = ThreadPoolBudget.Resolve(_config.Runtime.Threads);
         _threadPools = new OrionThreadPools(budget);
         _regionTickScheduler = new RegionTickScheduler(_threadPools, _config.Runtime.Regions.Scheduler);
+        _regionizer = new Regionizer(RegionizerOptions.FromGridExponent(_config.Runtime.Regions.GridExponent));
 
         _sender = new PacketSender(_config);
         _context = new ServerContext(_config, _sessions, _sender, _packetQueue, _workQueue);
@@ -107,6 +114,7 @@ public sealed class Server : IAsyncDisposable
         _dispatcher = null;
         _context = null;
         _sender = null;
+        _regionizer = null;
     }
 
     public async ValueTask DisposeAsync()
