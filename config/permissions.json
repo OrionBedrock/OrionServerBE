@@ -1,0 +1,24 @@
+{
+  "ops": [],
+  "permissions": {
+    "orion.command": true,
+    "orion.block.break": false,
+    "orion.block.place": false
+  },
+  "groups": {
+    "default": {
+      "permissions": [
+        "orion.command"
+      ]
+    },
+    "admin": {
+      "permissions": [
+        "orion.command",
+        "orion.block.break",
+        "orion.block.place",
+        "orion.admin"
+      ]
+    }
+  },
+  "players": {}
+}
