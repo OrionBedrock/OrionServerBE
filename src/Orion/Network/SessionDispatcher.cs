@@ -12,22 +12,29 @@ namespace Orion.Network;
 /// </summary>
 public sealed class ServerContext
 {
-    public ServerContext(OrionConfig config, SessionManager sessions, PacketSender sender, SessionPacketQueue queue)
+    public ServerContext(
+        OrionConfig config,
+        SessionManager sessions,
+        PacketSender sender,
+        SessionPacketQueue queue,
+        SessionWorkQueue work)
     {
         Config = config;
         Sessions = sessions;
         Sender = sender;
         Queue = queue;
+        Work = work;
     }
 
     public OrionConfig Config { get; }
     public SessionManager Sessions { get; }
     public PacketSender Sender { get; }
     public SessionPacketQueue Queue { get; }
+    public SessionWorkQueue Work { get; }
 }
 
 /// <summary>
-/// Drains the session packet queue on the tick loop and dispatches login-related packets.
+/// Drains the session packet/work queues on the tick loop and dispatches login-related packets.
 /// Folia check: precursor to global/region scheduling (Phase 04).
 /// </summary>
 public sealed class SessionDispatcher
@@ -61,6 +68,8 @@ public sealed class SessionDispatcher
                 Dispatch(session, packet);
             }
         }
+
+        _context.Work.Drain();
     }
 
     private void Dispatch(ConnectionSession session, DataPacket packet)

@@ -31,6 +31,12 @@ public static class LoginHandler
             return;
         }
 
+        if (session.State is SessionState.Authenticating or SessionState.Authenticated
+            or SessionState.PacksSent or SessionState.HandshakeComplete)
+        {
+            return;
+        }
+
         LoginEnvelope envelope = LoginEnvelope.Parse(packet.Identity);
         bool offlineLogin = OfflineIdentity.IsOfflineLogin(envelope)
             || envelope.AuthenticationType == 2;
@@ -56,11 +62,40 @@ public static class LoginHandler
             return;
         }
 
-        // Online path (JWT) is wired in the follow-up session commit.
-        Reject(context, session, "Online authentication is not available yet.");
+        session.State = SessionState.Authenticating;
+        LoginPacket captured = packet;
+
+        _ = Task.Run(() =>
+        {
+            try
+            {
+                VerifiedIdentity identity = LoginIdentity.Verify(captured.Identity);
+                context.Work.Enqueue(() =>
+                {
+                    if (!context.Sessions.TryGet(session.Connection, out _))
+                    {
+                        return;
+                    }
+
+                    CompleteLogin(context, session, captured, identity, offline: false);
+                });
+            }
+            catch (Exception exception)
+            {
+                context.Work.Enqueue(() =>
+                {
+                    if (!context.Sessions.TryGet(session.Connection, out _))
+                    {
+                        return;
+                    }
+
+                    Reject(context, session, "Authentication failed.", exception.Message);
+                });
+            }
+        });
     }
 
-    internal static void CompleteLogin(
+    public static void CompleteLogin(
         ServerContext context,
         ConnectionSession session,
         LoginPacket packet,
@@ -73,6 +108,8 @@ public static class LoginHandler
         Guid uuid = AuthPolicy.ResolvePlayerUuid(
             identity.Uuid, clientData.SelfSignedId, identity.Username, onlineMode);
         string xuid = AuthPolicy.ResolvePlayerXuid(identity.Xuid, uuid, onlineMode);
+
+        KickDuplicate(context, session, identity.Username, xuid);
 
         session.Username = identity.Username;
         session.Xuid = xuid;
@@ -95,6 +132,28 @@ public static class LoginHandler
 
         context.Sender.Send(session.Connection, [status, resources]);
         session.State = SessionState.PacksSent;
+    }
+
+    internal static void KickDuplicate(
+        ServerContext context,
+        ConnectionSession session,
+        string username,
+        string xuid)
+    {
+        ConnectionSession? existing = null;
+        if (!string.IsNullOrWhiteSpace(xuid))
+        {
+            existing = context.Sessions.FindByXuid(xuid);
+        }
+
+        existing ??= context.Sessions.FindByUsername(username);
+        if (existing is null || ReferenceEquals(existing, session))
+        {
+            return;
+        }
+
+        Reject(context, existing, "Logged in from another location.");
+        context.Sessions.Remove(existing.Connection);
     }
 
     internal static void Reject(

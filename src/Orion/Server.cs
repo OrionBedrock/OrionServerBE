@@ -9,6 +9,7 @@ public sealed class Server : IAsyncDisposable
     private readonly OrionConfig _config;
     private readonly SessionManager _sessions = new();
     private readonly SessionPacketQueue _packetQueue = new();
+    private readonly SessionWorkQueue _workQueue = new();
     private PacketSender? _sender;
     private ServerContext? _context;
     private SessionDispatcher? _dispatcher;
@@ -51,7 +52,7 @@ public sealed class Server : IAsyncDisposable
             edition: _config.Server.Edition);
 
         _sender = new PacketSender(_config);
-        _context = new ServerContext(_config, _sessions, _sender, _packetQueue);
+        _context = new ServerContext(_config, _sessions, _sender, _packetQueue, _workQueue);
         _dispatcher = new SessionDispatcher(_context);
 
         _raknet = new NetworkServer(options);

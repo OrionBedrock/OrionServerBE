@@ -6,6 +6,7 @@ public enum SessionState
 {
     Connected,
     NetworkReady,
+    Authenticating,
     Authenticated,
     PacksSent,
     HandshakeComplete,

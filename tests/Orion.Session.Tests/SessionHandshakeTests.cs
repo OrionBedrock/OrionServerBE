@@ -160,6 +160,86 @@ public sealed class SessionHandshakeTests
         Assert.Equal(original.CompressionMethod, decoded.CompressionMethod);
     }
 
+    [Fact]
+    public async Task Login_OnlinePath_RejectsInvalidJwt()
+    {
+        var config = CreateConfig(onlineMode: true, allowOfflineDev: false);
+        var (context, session, transport) = CreateHarness(config);
+
+        // RS256-shaped token that is not offline (aud/alg look online) but fails authority verify.
+        var login = new LoginPacket
+        {
+            Protocol = Constants.ProtocolVersion,
+            Identity = """{"AuthenticationType":0,"Token":"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InRlc3QifQ.eyJhdWQiOiJhcGk6Ly9hdXRoLW1pbmVjcmFmdC1zZXJ2aWNlcy9tdWx0aXBsYXllciIsImlzcyI6Imh0dHBzOi9leGFtcGxlLmludmFsaWQiLCJleHAiOjQ4MDAwMDAwMDAsInhuYW1lIjoiU3RldmUiLCJ4aWQiOiIxIiwiaWRlbnRpdHkiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDAifQ.sig"}""",
+            Client = FakeClientJwt(),
+        };
+
+        LoginHandler.Handle(context, session, login);
+        Assert.Equal(SessionState.Authenticating, session.State);
+
+        var deadline = DateTime.UtcNow.AddSeconds(15);
+        while (DateTime.UtcNow < deadline && transport.Disconnected == false && context.Work.Count == 0)
+        {
+            await Task.Delay(50);
+        }
+
+        context.Work.Drain();
+
+        Assert.True(transport.Disconnected);
+        Assert.NotEmpty(transport.Frames);
+        var packets = DecodeFrame(transport.Frames[^1]);
+        var disconnect = Assert.IsType<DisconnectPacket>(Assert.Single(packets));
+        Assert.Equal("Authentication failed.", disconnect.Message);
+    }
+
+    [Fact]
+    public void Login_CompleteLogin_KicksDuplicateUsername()
+    {
+        var config = CreateConfig(onlineMode: false, allowOfflineDev: true);
+        var transport = new RecordingNetworkSend();
+        var sender = new PacketSender(config, transport);
+        var sessions = new SessionManager();
+        var work = new SessionWorkQueue();
+        var context = new ServerContext(config, sessions, sender, new SessionPacketQueue(), work);
+
+        var first = sessions.Create(new StubConnection());
+        var second = sessions.Create(new StubConnection());
+
+        var identity = new Orion.Protocol.Login.VerifiedIdentity("pk", "Steve", "xuid-1", Guid.NewGuid().ToString());
+        var login = new LoginPacket
+        {
+            Protocol = Constants.ProtocolVersion,
+            Identity = "{}",
+            Client = FakeClientJwt(),
+        };
+
+        LoginHandler.CompleteLogin(context, first, login, identity, offline: true);
+        Assert.Equal("Steve", first.Username);
+        Assert.Equal(SessionState.PacksSent, first.State);
+
+        LoginHandler.CompleteLogin(context, second, login, identity, offline: true);
+
+        Assert.True(transport.Disconnected);
+        Assert.False(sessions.TryGet(first.Connection, out _));
+        Assert.Equal(SessionState.PacksSent, second.State);
+        Assert.Equal("Steve", second.Username);
+    }
+
+    private static string FakeClientJwt()
+    {
+        static string B64(string json)
+        {
+            return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json))
+                .TrimEnd('=')
+                .Replace('+', '-')
+                .Replace('/', '_');
+        }
+
+        string header = B64("""{"alg":"none"}""");
+        string payload = B64("""{"SelfSignedId":"00000000-0000-0000-0000-000000000001","DeviceModel":"test"}""");
+        return $"{header}.{payload}.e30";
+    }
+
     private static OrionConfig CreateConfig(bool onlineMode, bool allowOfflineDev) => new()
     {
         Server = new ServerRootConfig
@@ -184,7 +264,7 @@ public sealed class SessionHandshakeTests
         var session = sessions.Create(connection);
         var transport = new RecordingNetworkSend();
         var sender = new PacketSender(config, transport);
-        var context = new ServerContext(config, sessions, sender, new SessionPacketQueue());
+        var context = new ServerContext(config, sessions, sender, new SessionPacketQueue(), new SessionWorkQueue());
         return (context, session, transport);
     }
 
