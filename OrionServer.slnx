@@ -4,4 +4,7 @@
     <Project Path="src/Orion/Orion.csproj" />
     <Project Path="src/Protocol/Protocol.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Orion.Protocol.Tests/Orion.Protocol.Tests.csproj" />
+  </Folder>
 </Solution>

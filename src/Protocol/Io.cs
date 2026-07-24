@@ -71,7 +71,7 @@ namespace Orion.Protocol.Io {
         /// you can just use DataPacket.PacketId to check what packet it is
         /// </summary>
         public static DataPacket Deserialize(BinaryReader reader) {
-            PacketId id = (PacketId)reader.ReadVarUInt();
+            PacketId id = (PacketId)(reader.ReadVarUInt() & 0x3FF);
 
             if (!Pool.TryGetValue(id, out Func<DataPacket>? create)) {
                 throw new NotImplementedException($"Deserialization for packet ID {(byte)id} ({id}) is not implemented.");
