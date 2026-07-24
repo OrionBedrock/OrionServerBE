@@ -43,13 +43,14 @@ public sealed class RegionizerSectionTests
     [Fact]
     public void GridExponent_ChangesSectionGrouping()
     {
-        var fine = new Regionizer(RegionizerOptions.FromGridExponent(0));
+        // merge radius 0: only same-section chunks share a region (no neighbor merge).
+        var fine = new Regionizer(new RegionizerOptions(sectionChunkShift: 0, mergeRadiusSections: 0));
         ChunkRegion f0 = fine.AddChunk(0, 0);
         ChunkRegion f1 = fine.AddChunk(1, 0);
         Assert.NotSame(f0, f1);
         Assert.Equal(2, fine.RegionCount);
 
-        var coarse = new Regionizer(RegionizerOptions.FromGridExponent(4));
+        var coarse = new Regionizer(new RegionizerOptions(sectionChunkShift: 4, mergeRadiusSections: 0));
         ChunkRegion c0 = coarse.AddChunk(0, 0);
         ChunkRegion c1 = coarse.AddChunk(1, 0);
         Assert.Same(c0, c1);

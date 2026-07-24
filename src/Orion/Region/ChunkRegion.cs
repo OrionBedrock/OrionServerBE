@@ -28,7 +28,7 @@ public sealed class ChunkRegion
 
     public bool IsAlive => State is not RegionState.Dead;
 
-    internal ChunkRegion? MergeIntoLater => _mergeIntoLater;
+    public ChunkRegion? MergeIntoLater => _mergeIntoLater;
 
     internal void SetReady()
     {
