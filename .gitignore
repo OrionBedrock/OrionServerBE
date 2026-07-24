@@ -1,0 +1,45 @@
+# Local architecture / implementation docs (never publish)
+docs/
+
+# Build
+bin/
+obj/
+artifacts/
+*.user
+*.suo
+.vs/
+.idea/
+*.DotSettings.user
+
+# Runtime data
+worlds/
+logs/
+plugins/
+!plugins/.gitkeep
+resource_packs/
+behavior_packs/
+config/local.*.json
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Secrets / env
+.env
+.env.*
+*.pfx
+*.snk
+
+# NuGet
+*.nupkg
+*.snupkg
+nuget.config.local
+
+# Test / coverage
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
