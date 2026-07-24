@@ -1,9 +1,11 @@
+using Orion.Api;
 using Orion.Config;
 using Orion.Entity.Animation;
 using Orion.Network;
 using Orion.Permissions;
 using Orion.Player;
 using Orion.Player.Traits;
+using Orion.Plugins;
 using Orion.Region;
 using Orion.Registries;
 using Orion.Runtime;
@@ -16,7 +18,7 @@ using RakNet;
 
 namespace Orion;
 
-public sealed class Server : IAsyncDisposable
+public sealed class Server : IOrionServer, IAsyncDisposable
 {
     private readonly OrionConfig _config;
     private readonly SessionManager _sessions = new();
@@ -25,6 +27,7 @@ public sealed class Server : IAsyncDisposable
     private readonly PlayerManager _players = new();
     private readonly GlobalRegion _globalRegion = new();
     private readonly GlobalRegionScheduler _globalScheduler;
+    private readonly PluginManager _plugins;
     private Regionizer? _regionizer;
     private Orion.World.World? _world;
     private GeneratorRegistry? _generators;
@@ -46,9 +49,12 @@ public sealed class Server : IAsyncDisposable
         _config = config;
         Name = config.Server.Name;
         _globalScheduler = new GlobalRegionScheduler(_globalRegion);
+        _plugins = new PluginManager(this);
     }
 
     public string Name { get; }
+
+    public PluginManager Plugins => _plugins;
 
     public OrionConfig Config => _config;
 
@@ -163,10 +169,14 @@ public sealed class Server : IAsyncDisposable
             ExecuteGlobalTick,
             _config.Server.Orion.TicksPerSecond,
             _lifetime.Token);
+
+        _plugins.LoadAll(_config.Plugins.Directory);
     }
 
     public async ValueTask StopAsync()
     {
+        _plugins.DisableAll();
+
         if (_lifetime is not null)
         {
             await _lifetime.CancelAsync().ConfigureAwait(false);

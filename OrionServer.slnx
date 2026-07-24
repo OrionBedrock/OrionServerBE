@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/DedicatedServer/DedicatedServer.csproj" />
     <Project Path="src/Orion/Orion.csproj" />
+    <Project Path="src/Orion.Api/Orion.Api.csproj" />
     <Project Path="src/Protocol/Protocol.csproj" />
   </Folder>
   <Folder Name="/tests/">
