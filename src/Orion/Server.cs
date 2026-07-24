@@ -1,5 +1,6 @@
 using Orion.Config;
 using Orion.Network;
+using Orion.Region;
 using RakNet;
 
 namespace Orion;
@@ -10,6 +11,7 @@ public sealed class Server : IAsyncDisposable
     private readonly SessionManager _sessions = new();
     private readonly SessionPacketQueue _packetQueue = new();
     private readonly SessionWorkQueue _workQueue = new();
+    private readonly GlobalRegion _globalRegion = new();
     private PacketSender? _sender;
     private ServerContext? _context;
     private SessionDispatcher? _dispatcher;
@@ -30,6 +32,8 @@ public sealed class Server : IAsyncDisposable
     public NetworkServer? RakNet => _raknet;
 
     public SessionManager Sessions => _sessions;
+
+    public GlobalRegion GlobalRegion => _globalRegion;
 
     public async ValueTask StartAsync(CancellationToken cancellationToken = default)
     {
@@ -58,14 +62,14 @@ public sealed class Server : IAsyncDisposable
         _raknet = new NetworkServer(options);
         _lifetime = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-        // Folia check: RakNet I/O only creates sessions / enqueues bytes. Drain runs on the tick loop.
+        // Folia check: RakNet I/O only creates sessions / enqueues bytes. Drain runs on the global tick.
         _raknet.OnConnected += connection => _sessions.Create(connection);
         _raknet.OnDisconnected += connection => _sessions.Remove(connection);
         _raknet.OnMessage += (connection, payload) => _packetQueue.Enqueue(connection, payload);
 
         await _raknet.Start(_lifetime.Token).ConfigureAwait(false);
 
-        _tickLoop = Task.Run(() => RunRakNetTickLoop(_lifetime.Token), CancellationToken.None);
+        _tickLoop = Task.Run(() => RunGlobalRegionTickLoop(_lifetime.Token), CancellationToken.None);
     }
 
     public async ValueTask StopAsync()
@@ -103,17 +107,15 @@ public sealed class Server : IAsyncDisposable
         await StopAsync().ConfigureAwait(false);
     }
 
-    private void RunRakNetTickLoop(CancellationToken cancellationToken)
+    private void RunGlobalRegionTickLoop(CancellationToken cancellationToken)
     {
-        var interval = TimeSpan.FromMilliseconds(50);
+        var interval = TickTiming.Interval(_config.Server.Orion.TicksPerSecond);
         while (!cancellationToken.IsCancellationRequested)
         {
             var started = Environment.TickCount64;
             try
             {
-                _raknet?.Tick();
-                // Folia check: session drain is the Phase 03 stand-in for global/region schedule.
-                _dispatcher?.Drain();
+                _globalRegion.RunTick(ExecuteGlobalTick);
             }
             catch (Exception)
             {
@@ -127,5 +129,13 @@ public sealed class Server : IAsyncDisposable
                 Thread.Sleep((int)remaining);
             }
         }
+    }
+
+    private void ExecuteGlobalTick()
+    {
+        // Folia check: session drain + RakNet timers run on the global region tick thread.
+        _globalRegion.Drain();
+        _raknet?.Tick();
+        _dispatcher?.Drain();
     }
 }

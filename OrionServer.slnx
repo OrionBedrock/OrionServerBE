@@ -7,5 +7,6 @@
   <Folder Name="/tests/">
     <Project Path="tests/Orion.Protocol.Tests/Orion.Protocol.Tests.csproj" />
     <Project Path="tests/Orion.Session.Tests/Orion.Session.Tests.csproj" />
+    <Project Path="tests/Orion.Region.Tests/Orion.Region.Tests.csproj" />
   </Folder>
 </Solution>
