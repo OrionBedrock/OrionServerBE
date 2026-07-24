@@ -1,5 +1,6 @@
 using Orion.Protocol.Nbt;
 using Orion.Protocol.Types;
+using Orion.Traits;
 
 namespace Orion.Registries;
 
@@ -40,6 +41,12 @@ public sealed class ServerRegistries
     public Registry<BlockRegistration> Blocks { get; } = new();
 
     public Registry<ItemRegistration> Items { get; } = new();
+
+    public BlockTraitRegistry BlockTraits { get; } = new();
+
+    public ItemTraitRegistry ItemTraits { get; } = new();
+
+    public EntityTraitRegistry EntityTraits { get; } = new();
 
     public static ServerRegistries CreateMinimal()
     {
