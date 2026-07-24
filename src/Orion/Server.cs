@@ -29,6 +29,10 @@ public sealed class Server : IOrionServer, IAsyncDisposable
     private readonly GlobalRegionScheduler _globalScheduler;
     private readonly PluginManager _plugins;
     private Regionizer? _regionizer;
+    private RegionScheduler? _regionScheduler;
+    private IGlobalScheduler? _globalSchedulerApi;
+    private IRegionScheduler? _regionSchedulerApi;
+    private IContentRegistries? _registriesApi;
     private Orion.World.World? _world;
     private GeneratorRegistry? _generators;
     private WorldPersistence? _persistence;
@@ -56,6 +60,12 @@ public sealed class Server : IOrionServer, IAsyncDisposable
 
     public PluginManager Plugins => _plugins;
 
+    IGlobalScheduler? IOrionServer.GlobalScheduler => _globalSchedulerApi;
+
+    IRegionScheduler? IOrionServer.RegionScheduler => _regionSchedulerApi;
+
+    IContentRegistries? IOrionServer.Registries => _registriesApi;
+
     public OrionConfig Config => _config;
 
     public NetworkServer? RakNet => _raknet;
@@ -73,6 +83,8 @@ public sealed class Server : IOrionServer, IAsyncDisposable
     public GlobalRegion GlobalRegion => _globalRegion;
 
     public GlobalRegionScheduler GlobalScheduler => _globalScheduler;
+
+    public RegionScheduler? RegionScheduler => _regionScheduler;
 
     public Regionizer? Regionizer => _regionizer;
 
@@ -112,10 +124,10 @@ public sealed class Server : IOrionServer, IAsyncDisposable
         _regionTickScheduler = new RegionTickScheduler(_threadPools, _config.Runtime.Regions.Scheduler);
         _regionizer = new Regionizer(RegionizerOptions.FromGridExponent(_config.Runtime.Regions.GridExponent));
         _generators = GeneratorRegistry.CreateDefault();
-        var regionScheduler = new RegionScheduler(_regionizer);
+        _regionScheduler = new RegionScheduler(_regionizer);
         var pipeline = new ChunkLoadPipeline(
             _regionizer,
-            regionScheduler,
+            _regionScheduler,
             _generators,
             _threadPools);
 
@@ -137,6 +149,9 @@ public sealed class Server : IOrionServer, IAsyncDisposable
         _permissions = LoadPermissions(_config.Server.Orion.Permissions);
         _registries = ServerRegistries.CreateMinimal();
         _animationControllers = new AnimationControllerRegistry();
+        _globalSchedulerApi = new GlobalSchedulerAdapter(_globalScheduler);
+        _regionSchedulerApi = new RegionSchedulerAdapter(_regionScheduler);
+        _registriesApi = new ContentRegistriesAdapter(_registries);
         _context = new ServerContext(
             _config,
             _sessions,
@@ -208,6 +223,10 @@ public sealed class Server : IOrionServer, IAsyncDisposable
         _permissions = null;
         _animationControllers = null;
         _registries = null;
+        _globalSchedulerApi = null;
+        _regionSchedulerApi = null;
+        _registriesApi = null;
+        _regionScheduler = null;
 
         _raknet?.Stop();
         _raknet?.Dispose();

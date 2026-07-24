@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Hello</RootNamespace>
+    <AssemblyName>Hello</AssemblyName>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Orion.Api\Orion.Api.csproj" />
+  </ItemGroup>
+
+</Project>

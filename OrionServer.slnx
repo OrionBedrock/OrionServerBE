@@ -11,5 +11,7 @@
     <Project Path="tests/Orion.Region.Tests/Orion.Region.Tests.csproj" />
     <Project Path="tests/Orion.Scheduler.Tests/Orion.Scheduler.Tests.csproj" />
     <Project Path="tests/Orion.World.Tests/Orion.World.Tests.csproj" />
+    <Project Path="tests/Orion.Plugin.Tests/Orion.Plugin.Tests.csproj" />
+    <Project Path="tests/Orion.Plugin.Hello/Hello.csproj" />
   </Folder>
 </Solution>
