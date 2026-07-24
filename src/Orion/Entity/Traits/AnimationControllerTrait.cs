@@ -13,16 +13,19 @@ public sealed class AnimationControllerTrait : IEntityTrait
     private readonly EntityHandle _entity;
     private readonly AnimationControllerRegistry _registry;
     private readonly Regionizer _regionizer;
+    private readonly IAnimationEffectSink _effects;
     private readonly Dictionary<string, AnimationControllerInstance> _instances = new(StringComparer.Ordinal);
 
     public AnimationControllerTrait(
         EntityHandle entity,
         AnimationControllerRegistry registry,
-        Regionizer regionizer)
+        Regionizer regionizer,
+        IAnimationEffectSink? effects = null)
     {
         _entity = entity ?? throw new ArgumentNullException(nameof(entity));
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
         _regionizer = regionizer ?? throw new ArgumentNullException(nameof(regionizer));
+        _effects = effects ?? NullAnimationEffectSink.Instance;
     }
 
     public AnimationControllerInstance Attach(string definitionId)
@@ -38,7 +41,7 @@ public sealed class AnimationControllerTrait : IEntityTrait
             throw new InvalidOperationException($"Controller '{definitionId}' is already attached.");
         }
 
-        var instance = new AnimationControllerInstance(definition, _entity);
+        var instance = new AnimationControllerInstance(definition, _entity, _effects);
         _instances[definitionId] = instance;
         return instance;
     }

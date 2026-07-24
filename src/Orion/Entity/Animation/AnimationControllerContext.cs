@@ -7,6 +7,7 @@ public sealed class AnimationControllerContext
 {
     private readonly Dictionary<string, long> _longs;
     private readonly Dictionary<string, bool> _bools;
+    private readonly IAnimationEffectSink _effects;
 
     public AnimationControllerContext(
         EntityHandle entity,
@@ -15,7 +16,8 @@ public sealed class AnimationControllerContext
         long ticksInState,
         bool justEntered,
         Dictionary<string, long> longs,
-        Dictionary<string, bool> bools)
+        Dictionary<string, bool> bools,
+        IAnimationEffectSink effects)
     {
         Entity = entity;
         ControllerId = controllerId;
@@ -24,6 +26,7 @@ public sealed class AnimationControllerContext
         JustEntered = justEntered;
         _longs = longs;
         _bools = bools;
+        _effects = effects ?? NullAnimationEffectSink.Instance;
     }
 
     public EntityHandle Entity { get; }
@@ -45,4 +48,13 @@ public sealed class AnimationControllerContext
         => _bools.TryGetValue(name, out bool value) ? value : defaultValue;
 
     public void SetBool(string name, bool value) => _bools[name] = value;
+
+    public void EmitAnimate(string animationName)
+        => _effects.PlayAnimation(Entity, animationName);
+
+    public void EmitParticle(string particleName, double? x = null, double? y = null, double? z = null)
+        => _effects.SpawnParticle(Entity, particleName, x ?? Entity.X, y ?? Entity.Y, z ?? Entity.Z);
+
+    public void EmitSound(string soundName, double? x = null, double? y = null, double? z = null)
+        => _effects.PlaySound(Entity, soundName, x ?? Entity.X, y ?? Entity.Y, z ?? Entity.Z);
 }

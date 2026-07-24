@@ -7,16 +7,21 @@ public sealed class AnimationControllerInstance
 {
     private readonly AnimationControllerDefinition _definition;
     private readonly EntityHandle _entity;
+    private readonly IAnimationEffectSink _effects;
     private readonly Dictionary<string, long> _longs = new(StringComparer.Ordinal);
     private readonly Dictionary<string, bool> _bools = new(StringComparer.Ordinal);
     private AnimationControllerState _state;
     private long _ticksInState;
     private bool _justEntered = true;
 
-    public AnimationControllerInstance(AnimationControllerDefinition definition, EntityHandle entity)
+    public AnimationControllerInstance(
+        AnimationControllerDefinition definition,
+        EntityHandle entity,
+        IAnimationEffectSink? effects = null)
     {
         _definition = definition ?? throw new ArgumentNullException(nameof(definition));
         _entity = entity ?? throw new ArgumentNullException(nameof(entity));
+        _effects = effects ?? NullAnimationEffectSink.Instance;
         _state = definition.GetState(definition.InitialState);
     }
 
@@ -66,5 +71,6 @@ public sealed class AnimationControllerInstance
             _ticksInState,
             _justEntered,
             _longs,
-            _bools);
+            _bools,
+            _effects);
 }
