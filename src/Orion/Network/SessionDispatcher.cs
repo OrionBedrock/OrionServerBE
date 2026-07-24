@@ -7,6 +7,7 @@ using Orion.Protocol.Enums;
 using Orion.Protocol.Io;
 using Orion.Protocol.Packets;
 using Orion.Region;
+using Orion.Registries;
 using RakNet;
 
 namespace Orion.Network;
@@ -25,7 +26,8 @@ public sealed class ServerContext
         PlayerManager? players = null,
         Orion.World.World? world = null,
         Regionizer? regionizer = null,
-        PermissionService? permissions = null)
+        PermissionService? permissions = null,
+        ServerRegistries? registries = null)
     {
         Config = config;
         Sessions = sessions;
@@ -36,6 +38,7 @@ public sealed class ServerContext
         World = world;
         Regionizer = regionizer;
         Permissions = permissions;
+        Registries = registries;
     }
 
     public OrionConfig Config { get; }
@@ -47,6 +50,7 @@ public sealed class ServerContext
     public Orion.World.World? World { get; set; }
     public Regionizer? Regionizer { get; set; }
     public PermissionService? Permissions { get; set; }
+    public ServerRegistries? Registries { get; set; }
 }
 
 /// <summary>

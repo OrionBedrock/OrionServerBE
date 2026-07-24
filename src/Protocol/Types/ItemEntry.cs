@@ -37,7 +37,7 @@ public sealed class ItemEntry : DataType {
         RuntimeId = reader.ReadInt16(true);
         ComponentBased = reader.ReadBool();
         Version = reader.ReadZigZag();
-        Data = CompoundTag.Read(reader, NetworkNbtOptions);
+        Data = Io.NBT.ReadTag<CompoundTag>(reader, NetworkNbtOptions);
     }
 
     public void Write(BinaryWriter writer) {

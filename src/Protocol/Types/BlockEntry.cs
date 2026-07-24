@@ -19,7 +19,7 @@ public sealed class BlockEntry : DataType {
 
     public void Read(BinaryReader reader) {
         Name = reader.ReadVarString();
-        Properties = CompoundTag.Read(reader, TagOptions);
+        Properties = Io.NBT.ReadTag<CompoundTag>(reader, TagOptions);
     }
 
     public void Write(BinaryWriter writer) {

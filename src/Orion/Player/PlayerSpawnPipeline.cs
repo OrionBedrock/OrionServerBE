@@ -5,6 +5,7 @@ using Orion.Protocol.Io;
 using Orion.Protocol.Nbt;
 using Orion.Protocol.Packets;
 using Orion.Protocol.Types;
+using Orion.Registries;
 
 namespace Orion.Player;
 
@@ -18,9 +19,10 @@ public static class PlayerSpawnPipeline
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(player);
 
-        StartGamePacket startGame = BuildStartGame(context.Config, player);
+        ServerRegistries registries = context.Registries ?? ServerRegistries.CreateMinimal();
+        StartGamePacket startGame = BuildStartGame(context.Config, player, registries);
         var actorIds = new AvailableActorIdentifiersPacket { Data = new CompoundTag() };
-        var itemRegistry = new ItemRegistryPacket { Items = [] };
+        var itemRegistry = new ItemRegistryPacket { Items = registries.ToItemEntries() };
         var creative = new CreativeContentPacket { Groups = [], Items = [] };
         var spawnStatus = new PlayStatusPacket(PlayStatus.PlayerSpawn);
 
@@ -33,10 +35,14 @@ public static class PlayerSpawnPipeline
         player.Session.State = SessionState.InGame;
     }
 
-    public static StartGamePacket BuildStartGame(OrionConfig config, Player player)
+    public static StartGamePacket BuildStartGame(
+        OrionConfig config,
+        Player player,
+        ServerRegistries? registries = null)
     {
         WorldDefaultSettingsConfig worldSettings = config.Server.WorldDefaultSettings;
         string worldName = string.IsNullOrWhiteSpace(config.Server.Name) ? "OrionServer" : config.Server.Name;
+        List<BlockEntry> blocks = registries?.ToBlockEntries() ?? [];
 
         return new StartGamePacket
         {
@@ -117,7 +123,7 @@ public static class PlayerSpawnPipeline
             },
             Time = 0,
             EnchantmentSeed = 0,
-            Blocks = [],
+            Blocks = blocks,
             MultiPlayerCorrelationId = Guid.NewGuid().ToString(),
             ServerAuthoritativeInventory = true,
             GameVersion = Constants.MinecraftVersion,

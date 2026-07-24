@@ -4,6 +4,7 @@ using Orion.Permissions;
 using Orion.Player;
 using Orion.Player.Traits;
 using Orion.Region;
+using Orion.Registries;
 using Orion.Runtime;
 using Orion.Scheduler;
 using Orion.World.Generation;
@@ -28,6 +29,7 @@ public sealed class Server : IAsyncDisposable
     private GeneratorRegistry? _generators;
     private WorldPersistence? _persistence;
     private PermissionService? _permissions;
+    private ServerRegistries? _registries;
     private PacketSender? _sender;
     private ServerContext? _context;
     private SessionDispatcher? _dispatcher;
@@ -54,6 +56,8 @@ public sealed class Server : IAsyncDisposable
     public PlayerManager Players => _players;
 
     public PermissionService? Permissions => _permissions;
+
+    public ServerRegistries? Registries => _registries;
 
     public GlobalRegion GlobalRegion => _globalRegion;
 
@@ -116,6 +120,7 @@ public sealed class Server : IAsyncDisposable
         _sender = new PacketSender(_config);
         PacketSendGate.Bind(_sender);
         _permissions = LoadPermissions(_config.Server.Orion.Permissions);
+        _registries = ServerRegistries.CreateMinimal();
         _context = new ServerContext(
             _config,
             _sessions,
@@ -125,7 +130,8 @@ public sealed class Server : IAsyncDisposable
             _players,
             _world,
             _regionizer,
-            _permissions);
+            _permissions,
+            _registries);
         _dispatcher = new SessionDispatcher(_context);
 
         _raknet = new NetworkServer(options);
