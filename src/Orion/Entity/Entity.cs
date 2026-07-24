@@ -1,3 +1,4 @@
+using Orion.Region;
 using Orion.Scheduler;
 using Orion.World;
 
@@ -86,6 +87,58 @@ public sealed class Entity : ISchedulableEntity
         }
 
         Traits.NotifyChunkPositionChanged(chunkX, chunkZ);
+    }
+
+    /// <summary>
+    /// Continuous / same-tick move. Caller must be on the owning region tick thread.
+    /// Returns false (edge skip) when the destination chunk is not owned by the current region.
+    /// </summary>
+    public bool TryMove(Regionizer regionizer, double x, double y, double z)
+    {
+        ArgumentNullException.ThrowIfNull(regionizer);
+
+        int destCx = (int)Math.Floor(x) >> 4;
+        int destCz = (int)Math.Floor(z) >> 4;
+
+        lock (_sync)
+        {
+            if (_removed || _teleporting)
+            {
+                return false;
+            }
+        }
+
+        if (!RegionOwnership.IsOwnedByCurrentRegion(regionizer, destCx, destCz))
+        {
+            return false;
+        }
+
+        int chunkX;
+        int chunkZ;
+        bool chunkChanged;
+        lock (_sync)
+        {
+            if (_removed || _teleporting)
+            {
+                return false;
+            }
+
+            chunkX = destCx;
+            chunkZ = destCz;
+            chunkChanged = ChunkX != chunkX || ChunkZ != chunkZ;
+            X = x;
+            Y = y;
+            Z = z;
+            ChunkX = chunkX;
+            ChunkZ = chunkZ;
+        }
+
+        if (chunkChanged)
+        {
+            Traits.NotifyChunkPositionChanged(chunkX, chunkZ);
+        }
+
+        return true;
     }
 
     /// <summary>
