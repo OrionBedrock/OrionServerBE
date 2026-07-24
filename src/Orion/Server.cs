@@ -3,6 +3,7 @@ using Orion.Network;
 using Orion.Region;
 using Orion.Runtime;
 using Orion.Scheduler;
+using Orion.World.Provider;
 using RakNet;
 
 namespace Orion;
@@ -16,6 +17,7 @@ public sealed class Server : IAsyncDisposable
     private readonly GlobalRegion _globalRegion = new();
     private readonly GlobalRegionScheduler _globalScheduler;
     private Regionizer? _regionizer;
+    private Orion.World.World? _world;
     private PacketSender? _sender;
     private ServerContext? _context;
     private SessionDispatcher? _dispatcher;
@@ -44,9 +46,13 @@ public sealed class Server : IAsyncDisposable
     public GlobalRegionScheduler GlobalScheduler => _globalScheduler;
 
     /// <summary>
-    /// Chunk section regionizer (idle until world/tickets land in later phases).
+    /// Chunk section regionizer owned by the default world.
     /// </summary>
     public Regionizer? Regionizer => _regionizer;
+
+    public Orion.World.World? World => _world;
+
+    public OrionThreadPools? ThreadPools => _threadPools;
 
     public ThreadPoolBudget? ThreadBudget => _threadPools?.Budget;
 
@@ -74,6 +80,10 @@ public sealed class Server : IAsyncDisposable
         _threadPools = new OrionThreadPools(budget);
         _regionTickScheduler = new RegionTickScheduler(_threadPools, _config.Runtime.Regions.Scheduler);
         _regionizer = new Regionizer(RegionizerOptions.FromGridExponent(_config.Runtime.Regions.GridExponent));
+        _world = Orion.World.World.CreateFromConfig(
+            _config.Server.WorldDefaultSettings,
+            _regionizer,
+            new InMemoryWorldProvider());
 
         _sender = new PacketSender(_config);
         _context = new ServerContext(_config, _sessions, _sender, _packetQueue, _workQueue);
@@ -109,6 +119,9 @@ public sealed class Server : IAsyncDisposable
 
         _threadPools?.Dispose();
         _threadPools = null;
+
+        _world?.Dispose();
+        _world = null;
 
         _raknet?.Stop();
         _raknet?.Dispose();
