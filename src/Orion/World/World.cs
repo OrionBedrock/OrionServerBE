@@ -2,6 +2,7 @@ using Orion.Config;
 using Orion.Region;
 using Orion.World.Chunk;
 using Orion.World.Generation;
+using Orion.World.Persistence;
 using Orion.World.Provider;
 using Orion.World.Tickets;
 
@@ -71,6 +72,7 @@ public sealed class World : IDisposable
     private readonly Dictionary<string, Dimension> _dimensions = new(StringComparer.OrdinalIgnoreCase);
     private readonly IWorldProvider _provider;
     private ChunkLoadPipeline? _pipeline;
+    private WorldPersistence? _persistence;
     private bool _disposed;
 
     public World(string identifier, long seed, IWorldProvider provider)
@@ -87,6 +89,8 @@ public sealed class World : IDisposable
     public IWorldProvider Provider => _provider;
 
     public ChunkLoadPipeline? Pipeline => _pipeline;
+
+    public WorldPersistence? Persistence => _persistence;
 
     public IReadOnlyDictionary<string, Dimension> Dimensions => _dimensions;
 
@@ -122,11 +126,18 @@ public sealed class World : IDisposable
         }
     }
 
+    public void BindPersistence(WorldPersistence persistence)
+    {
+        _persistence = persistence ?? throw new ArgumentNullException(nameof(persistence));
+        _pipeline?.BindPersistence(persistence);
+    }
+
     public static World CreateFromConfig(
         WorldDefaultSettingsConfig settings,
         Regionizer regionizer,
         IWorldProvider? provider = null,
-        ChunkLoadPipeline? pipeline = null)
+        ChunkLoadPipeline? pipeline = null,
+        WorldPersistence? persistence = null)
     {
         ArgumentNullException.ThrowIfNull(settings);
         provider ??= new InMemoryWorldProvider();
@@ -146,6 +157,11 @@ public sealed class World : IDisposable
             world.BindPipeline(pipeline);
         }
 
+        if (persistence is not null)
+        {
+            world.BindPersistence(persistence);
+        }
+
         return world;
     }
 
@@ -157,6 +173,8 @@ public sealed class World : IDisposable
         }
 
         _disposed = true;
+        _persistence?.Dispose();
+        _persistence = null;
         _provider.Dispose();
     }
 }

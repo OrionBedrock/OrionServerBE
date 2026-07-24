@@ -4,7 +4,9 @@ using Orion.Region;
 using Orion.Runtime;
 using Orion.Scheduler;
 using Orion.World.Generation;
+using Orion.World.Persistence;
 using Orion.World.Provider;
+using Orion.World.Provider.LevelDb;
 using RakNet;
 
 namespace Orion;
@@ -20,6 +22,7 @@ public sealed class Server : IAsyncDisposable
     private Regionizer? _regionizer;
     private Orion.World.World? _world;
     private GeneratorRegistry? _generators;
+    private WorldPersistence? _persistence;
     private PacketSender? _sender;
     private ServerContext? _context;
     private SessionDispatcher? _dispatcher;
@@ -91,11 +94,17 @@ public sealed class Server : IAsyncDisposable
             regionScheduler,
             _generators,
             _threadPools);
+
+        string worldId = _config.Server.WorldDefaultSettings.Identifier;
+        string dbPath = Path.Combine("worlds", worldId, "db");
+        IWorldProvider provider = new LevelDbWorldProvider(dbPath);
+        _persistence = new WorldPersistence(provider, _threadPools);
         _world = Orion.World.World.CreateFromConfig(
             _config.Server.WorldDefaultSettings,
             _regionizer,
-            new InMemoryWorldProvider(),
-            pipeline);
+            provider,
+            pipeline,
+            _persistence);
 
         _sender = new PacketSender(_config);
         _context = new ServerContext(_config, _sessions, _sender, _packetQueue, _workQueue);
@@ -129,11 +138,21 @@ public sealed class Server : IAsyncDisposable
         _regionTickScheduler?.Dispose();
         _regionTickScheduler = null;
 
+        try
+        {
+            _persistence?.Flush(TimeSpan.FromSeconds(10));
+        }
+        catch
+        {
+            // Best-effort flush before tearing down pools.
+        }
+
         _threadPools?.Dispose();
         _threadPools = null;
 
         _world?.Dispose();
         _world = null;
+        _persistence = null;
         _generators = null;
 
         _raknet?.Stop();
@@ -156,6 +175,7 @@ public sealed class Server : IAsyncDisposable
     private void ExecuteGlobalTick()
     {
         // Folia check: global scheduler → session drain + RakNet timers on the global tick thread.
+        // Dirty chunk writes never run here — they go through QueueIoPersistence.
         _globalScheduler.Tick();
         _globalRegion.Drain();
         _raknet?.Tick();

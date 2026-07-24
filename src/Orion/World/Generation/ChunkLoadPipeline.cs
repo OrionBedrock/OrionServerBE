@@ -3,6 +3,7 @@ using Orion.Region;
 using Orion.Runtime;
 using Orion.Scheduler;
 using Orion.World.Chunk;
+using Orion.World.Persistence;
 using Orion.World.Tickets;
 
 namespace Orion.World.Generation;
@@ -16,6 +17,7 @@ public sealed class ChunkLoadPipeline
     private readonly RegionScheduler _regionScheduler;
     private readonly OrionThreadPools? _pools;
     private readonly GeneratorRegistry _registry;
+    private WorldPersistence? _persistence;
     private readonly ConcurrentDictionary<(string Dim, int X, int Z), byte> _inflight = new();
 
     public ChunkLoadPipeline(
@@ -31,6 +33,9 @@ public sealed class ChunkLoadPipeline
     }
 
     public GeneratorRegistry Registry => _registry;
+
+    public void BindPersistence(WorldPersistence persistence)
+        => _persistence = persistence ?? throw new ArgumentNullException(nameof(persistence));
 
     /// <summary>
     /// Queue generation when the loaded column is not yet generated.
@@ -71,6 +76,11 @@ public sealed class ChunkLoadPipeline
                 _regionScheduler.Execute(worldId, chunkX, chunkZ, () =>
                 {
                     tickets.PutGenerated(dimensionId, generated);
+                    if (generated.IsDirty)
+                    {
+                        _persistence?.ScheduleSave(dimensionId, generated);
+                    }
+
                     _inflight.TryRemove(key, out _);
                 });
 
