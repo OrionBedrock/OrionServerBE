@@ -1,6 +1,7 @@
 using Orion.Config;
 using Orion.Region;
 using Orion.World.Chunk;
+using Orion.World.Generation;
 using Orion.World.Provider;
 using Orion.World.Tickets;
 
@@ -10,6 +11,8 @@ public sealed class Dimension
 {
     private readonly IWorldProvider _provider;
     private readonly ChunkTicketManager _tickets;
+    private ChunkLoadPipeline? _pipeline;
+    private string _worldId = "default";
 
     public Dimension(string identifier, int type, string generatorId, Regionizer regionizer, IWorldProvider provider)
     {
@@ -30,8 +33,25 @@ public sealed class Dimension
 
     public IWorldProvider Provider => _provider;
 
+    public ChunkLoadPipeline? Pipeline => _pipeline;
+
+    internal void BindPipeline(string worldId, ChunkLoadPipeline pipeline)
+    {
+        _worldId = worldId;
+        _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
+    }
+
     public SimulationTicket AcquireTicket(int chunkX, int chunkZ)
-        => _tickets.Acquire(Identifier, chunkX, chunkZ, LoadOrCreatePlaceholder);
+    {
+        SimulationTicket ticket = _tickets.Acquire(Identifier, chunkX, chunkZ, LoadOrCreatePlaceholder);
+        ChunkColumn? loaded = _tickets.GetLoadedChunk(Identifier, chunkX, chunkZ);
+        if (loaded is { IsGenerated: false } && _pipeline is not null)
+        {
+            _pipeline.RequestGenerate(_worldId, Identifier, _tickets, loaded);
+        }
+
+        return ticket;
+    }
 
     private ChunkColumn LoadOrCreatePlaceholder(string dimensionId, int chunkX, int chunkZ)
     {
@@ -50,6 +70,7 @@ public sealed class World : IDisposable
 {
     private readonly Dictionary<string, Dimension> _dimensions = new(StringComparer.OrdinalIgnoreCase);
     private readonly IWorldProvider _provider;
+    private ChunkLoadPipeline? _pipeline;
     private bool _disposed;
 
     public World(string identifier, long seed, IWorldProvider provider)
@@ -64,6 +85,8 @@ public sealed class World : IDisposable
     public long Seed { get; }
 
     public IWorldProvider Provider => _provider;
+
+    public ChunkLoadPipeline? Pipeline => _pipeline;
 
     public IReadOnlyDictionary<string, Dimension> Dimensions => _dimensions;
 
@@ -81,11 +104,29 @@ public sealed class World : IDisposable
     {
         ArgumentNullException.ThrowIfNull(config);
         var dimension = new Dimension(config.Identifier, config.Type, config.Generator, regionizer, _provider);
+        if (_pipeline is not null)
+        {
+            dimension.BindPipeline(Identifier, _pipeline);
+        }
+
         _dimensions[config.Identifier] = dimension;
         return dimension;
     }
 
-    public static World CreateFromConfig(WorldDefaultSettingsConfig settings, Regionizer regionizer, IWorldProvider? provider = null)
+    public void BindPipeline(ChunkLoadPipeline pipeline)
+    {
+        _pipeline = pipeline ?? throw new ArgumentNullException(nameof(pipeline));
+        foreach (Dimension dimension in _dimensions.Values)
+        {
+            dimension.BindPipeline(Identifier, pipeline);
+        }
+    }
+
+    public static World CreateFromConfig(
+        WorldDefaultSettingsConfig settings,
+        Regionizer regionizer,
+        IWorldProvider? provider = null,
+        ChunkLoadPipeline? pipeline = null)
     {
         ArgumentNullException.ThrowIfNull(settings);
         provider ??= new InMemoryWorldProvider();
@@ -98,6 +139,11 @@ public sealed class World : IDisposable
         foreach (DimensionConfig dim in dims)
         {
             world.AddDimension(dim, regionizer);
+        }
+
+        if (pipeline is not null)
+        {
+            world.BindPipeline(pipeline);
         }
 
         return world;

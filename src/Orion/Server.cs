@@ -3,6 +3,7 @@ using Orion.Network;
 using Orion.Region;
 using Orion.Runtime;
 using Orion.Scheduler;
+using Orion.World.Generation;
 using Orion.World.Provider;
 using RakNet;
 
@@ -80,10 +81,17 @@ public sealed class Server : IAsyncDisposable
         _threadPools = new OrionThreadPools(budget);
         _regionTickScheduler = new RegionTickScheduler(_threadPools, _config.Runtime.Regions.Scheduler);
         _regionizer = new Regionizer(RegionizerOptions.FromGridExponent(_config.Runtime.Regions.GridExponent));
+        var regionScheduler = new RegionScheduler(_regionizer);
+        var pipeline = new ChunkLoadPipeline(
+            _regionizer,
+            regionScheduler,
+            new VoidGenerator(),
+            _threadPools);
         _world = Orion.World.World.CreateFromConfig(
             _config.Server.WorldDefaultSettings,
             _regionizer,
-            new InMemoryWorldProvider());
+            new InMemoryWorldProvider(),
+            pipeline);
 
         _sender = new PacketSender(_config);
         _context = new ServerContext(_config, _sessions, _sender, _packetQueue, _workQueue);
