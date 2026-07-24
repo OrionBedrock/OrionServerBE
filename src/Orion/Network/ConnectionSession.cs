@@ -10,11 +10,12 @@ public enum SessionState
     Authenticated,
     PacksSent,
     HandshakeComplete,
+    InGame,
 }
 
 /// <summary>
-/// Per-connection Bedrock session state. No player entity yet (Phase 09).
-/// Folia check: mutated only from the session drain / tick path, not from RakNet I/O callbacks.
+/// Per-connection Bedrock session state.
+/// Folia check: mutated only from the session drain / region tick path, not from RakNet I/O callbacks.
 /// </summary>
 public sealed class ConnectionSession
 {
@@ -36,4 +37,6 @@ public sealed class ConnectionSession
     public string? IdentityPublicKey { get; set; }
 
     public bool OfflineAuth { get; set; }
+
+    public Orion.Player.Player? Player { get; set; }
 }

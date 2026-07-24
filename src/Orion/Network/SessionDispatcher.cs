@@ -1,8 +1,10 @@
 using Orion.Config;
 using Orion.Network.Handlers;
+using Orion.Player;
 using Orion.Protocol.Enums;
 using Orion.Protocol.Io;
 using Orion.Protocol.Packets;
+using Orion.Region;
 using RakNet;
 
 namespace Orion.Network;
@@ -17,13 +19,19 @@ public sealed class ServerContext
         SessionManager sessions,
         PacketSender sender,
         SessionPacketQueue queue,
-        SessionWorkQueue work)
+        SessionWorkQueue work,
+        PlayerManager? players = null,
+        Orion.World.World? world = null,
+        Regionizer? regionizer = null)
     {
         Config = config;
         Sessions = sessions;
         Sender = sender;
         Queue = queue;
         Work = work;
+        Players = players;
+        World = world;
+        Regionizer = regionizer;
     }
 
     public OrionConfig Config { get; }
@@ -31,11 +39,14 @@ public sealed class ServerContext
     public PacketSender Sender { get; }
     public SessionPacketQueue Queue { get; }
     public SessionWorkQueue Work { get; }
+    public PlayerManager? Players { get; set; }
+    public Orion.World.World? World { get; set; }
+    public Regionizer? Regionizer { get; set; }
 }
 
 /// <summary>
-/// Drains the session packet/work queues on the tick loop and dispatches login-related packets.
-/// Folia check: precursor to global/region scheduling (Phase 04).
+/// Drains session queues. Pre-game packets dispatch on the global tick;
+/// in-game packets enqueue to the player's region mailbox (Folia).
 /// </summary>
 public sealed class SessionDispatcher
 {
@@ -65,7 +76,15 @@ public sealed class SessionDispatcher
 
             foreach (DataPacket packet in _decoded)
             {
-                Dispatch(session, packet);
+                if (session.State >= SessionState.InGame && session.Player is { } player)
+                {
+                    DataPacket captured = packet;
+                    player.EnqueueOnRegion(() => Dispatch(session, captured));
+                }
+                else
+                {
+                    Dispatch(session, packet);
+                }
             }
         }
 

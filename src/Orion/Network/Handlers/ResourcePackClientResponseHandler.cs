@@ -1,6 +1,8 @@
+using Orion.Config;
 using Orion.Protocol.Enums;
 using Orion.Protocol.Io;
 using Orion.Protocol.Packets;
+using Orion.Player;
 
 namespace Orion.Network.Handlers;
 
@@ -24,7 +26,6 @@ public static class ResourcePackClientResponseHandler
                 return;
 
             case ResourcePackResponse.SendPacks:
-                // No packs are advertised in Phase 03.
                 return;
 
             case ResourcePackResponse.AllPacksDownloaded:
@@ -41,15 +42,40 @@ public static class ResourcePackClientResponseHandler
                 return;
 
             case ResourcePackResponse.Completed:
-                // StartGame / spawn is Phase 09. Session handshake ends here.
                 if (session.State is SessionState.Authenticated or SessionState.PacksSent)
                 {
                     session.State = SessionState.HandshakeComplete;
                 }
+
+                if (context.Players is null || context.World is null || context.Regionizer is null)
+                {
+                    return;
+                }
+
+                if (session.Player is not null)
+                {
+                    return;
+                }
+
+                SpawnPlayer(context, session);
                 return;
 
             default:
                 return;
         }
+    }
+
+    private static void SpawnPlayer(ServerContext context, ConnectionSession session)
+    {
+        var dims = context.Config.Server.WorldDefaultSettings.Dimensions;
+        DimensionConfig dimConfig = dims.Count > 0 ? dims[0] : new DimensionConfig();
+
+        Player.Player player = context.Players!.Create(
+            session,
+            context.World!,
+            context.Regionizer!,
+            dimConfig);
+
+        PlayerSpawnPipeline.SendSpawnSequence(context, player);
     }
 }

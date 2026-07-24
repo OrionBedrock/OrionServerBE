@@ -1,9 +1,13 @@
 using Orion.Config;
 using Orion.Network;
 using Orion.Network.Handlers;
+using Orion.Player;
 using Orion.Protocol.Enums;
 using Orion.Protocol.Io;
 using Orion.Protocol.Packets;
+using Orion.Region;
+using Orion.World;
+using Orion.World.Provider;
 using RakNet;
 using RakNet.Packets.Enums;
 using Xunit;
@@ -135,6 +139,70 @@ public sealed class SessionHandshakeTests
             });
 
         Assert.Equal(SessionState.HandshakeComplete, session.State);
+    }
+
+    [Fact]
+    public void ResourcePackCompleted_WithWorld_SendsStartGameAndPlayerSpawn()
+    {
+        var config = CreateConfig(onlineMode: true, allowOfflineDev: true);
+        config.Server.WorldDefaultSettings = new WorldDefaultSettingsConfig
+        {
+            Identifier = "default",
+            Seed = 1,
+            Dimensions =
+            [
+                new DimensionConfig
+                {
+                    Identifier = "overworld",
+                    Generator = "void",
+                    SimulationDistance = 2,
+                    SpawnPosition = [0, 64, 0],
+                },
+            ],
+        };
+
+        var regionizer = new Regionizer(RegionizerOptions.FromGridExponent(0));
+        using var provider = new InMemoryWorldProvider();
+        using World.World world = World.World.CreateFromConfig(
+            config.Server.WorldDefaultSettings,
+            regionizer,
+            provider);
+        var players = new PlayerManager();
+
+        var connection = new StubConnection();
+        var sessions = new SessionManager();
+        var session = sessions.Create(connection);
+        session.State = SessionState.PacksSent;
+        session.Username = "Steve";
+        var transport = new RecordingNetworkSend();
+        var sender = new PacketSender(config, transport);
+        var context = new ServerContext(
+            config,
+            sessions,
+            sender,
+            new SessionPacketQueue(),
+            new SessionWorkQueue(),
+            players,
+            world,
+            regionizer);
+
+        ResourcePackClientResponseHandler.Handle(
+            context,
+            session,
+            new ResourcePackClientResponsePacket { Response = ResourcePackResponse.Completed });
+
+        Assert.Equal(SessionState.InGame, session.State);
+        Assert.NotNull(session.Player);
+        Assert.Equal(1, players.Count);
+        Assert.NotNull(regionizer.GetRegionAt(0, 0));
+
+        var all = transport.Frames.SelectMany(DecodeFrame).ToList();
+        Assert.Contains(all, p => p is StartGamePacket);
+        Assert.Contains(all, p => p is PlayStatusPacket { Status: PlayStatus.PlayerSpawn });
+
+        players.Remove(connection);
+        Assert.Equal(0, players.Count);
+        Assert.Null(regionizer.GetRegionAt(0, 0));
     }
 
     [Fact]
@@ -270,7 +338,7 @@ public sealed class SessionHandshakeTests
 
     private static List<DataPacket> DecodeFrame(byte[] framed)
     {
-        Span<byte> scratch = stackalloc byte[64 * 1024];
+        byte[] scratch = new byte[2 * 1024 * 1024];
         var packets = new List<DataPacket>();
         Assert.True(GamePacketCodec.TryDecode(framed, scratch, packets));
         return packets;
@@ -295,4 +363,3 @@ internal sealed class StubConnection : NetworkConnection
     {
     }
 }
-

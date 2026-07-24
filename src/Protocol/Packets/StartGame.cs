@@ -519,7 +519,7 @@ public sealed record StartGamePacket : DataPacket {
         MultiPlayerCorrelationId = reader.ReadVarString();
         ServerAuthoritativeInventory = reader.ReadBool();
         GameVersion = reader.ReadVarString();
-        PropertyData = CompoundTag.Read(reader, TagOptions);
+        PropertyData = Io.NBT.ReadTag<CompoundTag>(reader, TagOptions);
         ServerBlockStateChecksum = reader.ReadUInt64(true);
         WorldTemplateId = UUID.Read(reader);
         ClientSideGeneration = reader.ReadBool();

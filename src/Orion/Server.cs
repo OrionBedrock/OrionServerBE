@@ -1,5 +1,6 @@
 using Orion.Config;
 using Orion.Network;
+using Orion.Player;
 using Orion.Region;
 using Orion.Runtime;
 using Orion.Scheduler;
@@ -17,6 +18,7 @@ public sealed class Server : IAsyncDisposable
     private readonly SessionManager _sessions = new();
     private readonly SessionPacketQueue _packetQueue = new();
     private readonly SessionWorkQueue _workQueue = new();
+    private readonly PlayerManager _players = new();
     private readonly GlobalRegion _globalRegion = new();
     private readonly GlobalRegionScheduler _globalScheduler;
     private Regionizer? _regionizer;
@@ -46,13 +48,12 @@ public sealed class Server : IAsyncDisposable
 
     public SessionManager Sessions => _sessions;
 
+    public PlayerManager Players => _players;
+
     public GlobalRegion GlobalRegion => _globalRegion;
 
     public GlobalRegionScheduler GlobalScheduler => _globalScheduler;
 
-    /// <summary>
-    /// Chunk section regionizer owned by the default world.
-    /// </summary>
     public Regionizer? Regionizer => _regionizer;
 
     public Orion.World.World? World => _world;
@@ -107,15 +108,27 @@ public sealed class Server : IAsyncDisposable
             _persistence);
 
         _sender = new PacketSender(_config);
-        _context = new ServerContext(_config, _sessions, _sender, _packetQueue, _workQueue);
+        _context = new ServerContext(
+            _config,
+            _sessions,
+            _sender,
+            _packetQueue,
+            _workQueue,
+            _players,
+            _world,
+            _regionizer);
         _dispatcher = new SessionDispatcher(_context);
 
         _raknet = new NetworkServer(options);
         _lifetime = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-        // Folia check: RakNet I/O only creates sessions / enqueues bytes. Drain runs on the global tick.
+        // Folia check: RakNet I/O only creates sessions / enqueues bytes.
         _raknet.OnConnected += connection => _sessions.Create(connection);
-        _raknet.OnDisconnected += connection => _sessions.Remove(connection);
+        _raknet.OnDisconnected += connection =>
+        {
+            _players.Remove(connection);
+            _sessions.Remove(connection);
+        };
         _raknet.OnMessage += (connection, payload) => _packetQueue.Enqueue(connection, payload);
 
         await _raknet.Start(_lifetime.Token).ConfigureAwait(false);
@@ -174,11 +187,12 @@ public sealed class Server : IAsyncDisposable
 
     private void ExecuteGlobalTick()
     {
-        // Folia check: global scheduler → session drain + RakNet timers on the global tick thread.
-        // Dirty chunk writes never run here — they go through QueueIoPersistence.
+        // Global schedulers + RakNet timers on the global tick thread.
+        // In-game packet dispatch + region scheduler drain happen on player regions.
         _globalScheduler.Tick();
         _globalRegion.Drain();
         _raknet?.Tick();
         _dispatcher?.Drain();
+        _players.TickAllRegions();
     }
 }
