@@ -6,6 +6,7 @@ namespace Orion.Region;
 public sealed class ChunkRegion
 {
     private readonly HashSet<RegionSection> _sections = new();
+    private readonly Orion.Scheduler.SchedulerTaskQueue _schedulerTasks = new();
     private int _tickThreadId = -1;
     private ChunkRegion? _mergeIntoLater;
 
@@ -77,6 +78,21 @@ public sealed class ChunkRegion
 
     public bool IsCurrentTickThread
         => State == RegionState.Ticking && _tickThreadId == Environment.CurrentManagedThreadId;
+
+    internal Orion.Scheduler.SchedulerTaskQueue SchedulerTasks => _schedulerTasks;
+
+    /// <summary>
+    /// Folia check: drain region task queue only while this region owns the current tick thread.
+    /// </summary>
+    public void DrainSchedulerTasks()
+    {
+        if (!IsCurrentTickThread)
+        {
+            throw new InvalidOperationException("Scheduler drain requires the owning region tick thread.");
+        }
+
+        _schedulerTasks.DrainOneTick();
+    }
 
     internal void AddSection(RegionSection section)
     {
