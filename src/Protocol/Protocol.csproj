@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Orion.Protocol</RootNamespace>
+    <AssemblyName>Orion.Protocol</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Basalt.Binary" Version="0.1.0" />
+    <PackageReference Include="conmaster.compression.spanzlib" Version="1.1.0" />
+  </ItemGroup>
+
+</Project>
