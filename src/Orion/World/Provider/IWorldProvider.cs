@@ -11,4 +11,10 @@ public interface IWorldProvider : IDisposable
     void SaveChunk(string dimensionId, ChunkColumn chunk);
 
     void DeleteChunk(string dimensionId, int chunkX, int chunkZ);
+
+    bool TryLoadPlayerBlob(string xuid, out byte[]? blob);
+
+    void SavePlayerBlob(string xuid, ReadOnlySpan<byte> blob);
+
+    void DeletePlayerBlob(string xuid);
 }

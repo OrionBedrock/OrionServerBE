@@ -65,6 +65,8 @@ public sealed class Player
 
     public bool IsOperator => _permissions.IsOperator;
 
+    public PlayerDataStore Data { get; } = new();
+
     public void ApplyPermissions(ResolvedPermissions permissions)
     {
         _permissions = permissions ?? throw new ArgumentNullException(nameof(permissions));

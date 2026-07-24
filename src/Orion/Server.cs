@@ -28,6 +28,7 @@ public sealed class Server : IAsyncDisposable
     private Orion.World.World? _world;
     private GeneratorRegistry? _generators;
     private WorldPersistence? _persistence;
+    private PlayerPersistence? _playerPersistence;
     private PermissionService? _permissions;
     private ServerRegistries? _registries;
     private PacketSender? _sender;
@@ -68,6 +69,8 @@ public sealed class Server : IAsyncDisposable
     public Orion.World.World? World => _world;
 
     public GeneratorRegistry? Generators => _generators;
+
+    public PlayerPersistence? PlayerPersistence => _playerPersistence;
 
     public OrionThreadPools? ThreadPools => _threadPools;
 
@@ -110,6 +113,8 @@ public sealed class Server : IAsyncDisposable
         string dbPath = Path.Combine("worlds", worldId, "db");
         IWorldProvider provider = new LevelDbWorldProvider(dbPath);
         _persistence = new WorldPersistence(provider, _threadPools);
+        _playerPersistence = new PlayerPersistence(provider, _threadPools);
+        _players.BindPersistence(provider, _playerPersistence);
         _world = Orion.World.World.CreateFromConfig(
             _config.Server.WorldDefaultSettings,
             _regionizer,
@@ -168,6 +173,7 @@ public sealed class Server : IAsyncDisposable
 
         try
         {
+            _players.FlushDirtyPlayers();
             _persistence?.Flush(TimeSpan.FromSeconds(10));
         }
         catch
@@ -180,6 +186,8 @@ public sealed class Server : IAsyncDisposable
 
         _world?.Dispose();
         _world = null;
+        _playerPersistence?.Dispose();
+        _playerPersistence = null;
         _persistence = null;
         _generators = null;
         _permissions = null;

@@ -76,6 +76,42 @@ public sealed class LevelDbWorldProvider : IWorldProvider
         }
     }
 
+    public bool TryLoadPlayerBlob(string xuid, out byte[]? blob)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentException.ThrowIfNullOrWhiteSpace(xuid);
+        byte[] key = LevelDbPlayerKeys.BuildPlayerKey(xuid);
+        lock (_sync)
+        {
+            blob = _database.Get(key);
+        }
+
+        return blob is { Length: > 0 };
+    }
+
+    public void SavePlayerBlob(string xuid, ReadOnlySpan<byte> blob)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentException.ThrowIfNullOrWhiteSpace(xuid);
+        byte[] key = LevelDbPlayerKeys.BuildPlayerKey(xuid);
+        byte[] payload = blob.ToArray();
+        lock (_sync)
+        {
+            _database.Put(key, payload);
+        }
+    }
+
+    public void DeletePlayerBlob(string xuid)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentException.ThrowIfNullOrWhiteSpace(xuid);
+        byte[] key = LevelDbPlayerKeys.BuildPlayerKey(xuid);
+        lock (_sync)
+        {
+            _database.Delete(key);
+        }
+    }
+
     public void Flush()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
