@@ -32,7 +32,7 @@ public sealed class VoidGeneratorTests
         using var provider = new InMemoryWorldProvider();
         var regionizer = new Regionizer(RegionizerOptions.FromGridExponent(4));
         var regionScheduler = new RegionScheduler(regionizer);
-        var pipeline = new ChunkLoadPipeline(regionizer, regionScheduler, new VoidGenerator());
+        var pipeline = new ChunkLoadPipeline(regionizer, regionScheduler, GeneratorRegistry.CreateDefault());
         using World world = World.CreateFromConfig(DefaultSettings(), regionizer, provider, pipeline);
 
         Dimension overworld = world.GetDimension("overworld");
@@ -62,7 +62,7 @@ public sealed class VoidGeneratorTests
         using var provider = new InMemoryWorldProvider();
         var regionizer = new Regionizer(RegionizerOptions.FromGridExponent(4));
         var regionScheduler = new RegionScheduler(regionizer);
-        var pipeline = new ChunkLoadPipeline(regionizer, regionScheduler, new VoidGenerator(), pools);
+        var pipeline = new ChunkLoadPipeline(regionizer, regionScheduler, GeneratorRegistry.CreateDefault(), pools);
         using World world = World.CreateFromConfig(DefaultSettings(), regionizer, provider, pipeline);
 
         Dimension overworld = world.GetDimension("overworld");

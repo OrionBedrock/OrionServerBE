@@ -19,6 +19,7 @@ public sealed class Server : IAsyncDisposable
     private readonly GlobalRegionScheduler _globalScheduler;
     private Regionizer? _regionizer;
     private Orion.World.World? _world;
+    private GeneratorRegistry? _generators;
     private PacketSender? _sender;
     private ServerContext? _context;
     private SessionDispatcher? _dispatcher;
@@ -53,6 +54,8 @@ public sealed class Server : IAsyncDisposable
 
     public Orion.World.World? World => _world;
 
+    public GeneratorRegistry? Generators => _generators;
+
     public OrionThreadPools? ThreadPools => _threadPools;
 
     public ThreadPoolBudget? ThreadBudget => _threadPools?.Budget;
@@ -81,11 +84,12 @@ public sealed class Server : IAsyncDisposable
         _threadPools = new OrionThreadPools(budget);
         _regionTickScheduler = new RegionTickScheduler(_threadPools, _config.Runtime.Regions.Scheduler);
         _regionizer = new Regionizer(RegionizerOptions.FromGridExponent(_config.Runtime.Regions.GridExponent));
+        _generators = GeneratorRegistry.CreateDefault();
         var regionScheduler = new RegionScheduler(_regionizer);
         var pipeline = new ChunkLoadPipeline(
             _regionizer,
             regionScheduler,
-            new VoidGenerator(),
+            _generators,
             _threadPools);
         _world = Orion.World.World.CreateFromConfig(
             _config.Server.WorldDefaultSettings,
@@ -130,6 +134,7 @@ public sealed class Server : IAsyncDisposable
 
         _world?.Dispose();
         _world = null;
+        _generators = null;
 
         _raknet?.Stop();
         _raknet?.Dispose();

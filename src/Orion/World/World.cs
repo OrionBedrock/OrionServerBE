@@ -47,7 +47,7 @@ public sealed class Dimension
         ChunkColumn? loaded = _tickets.GetLoadedChunk(Identifier, chunkX, chunkZ);
         if (loaded is { IsGenerated: false } && _pipeline is not null)
         {
-            _pipeline.RequestGenerate(_worldId, Identifier, _tickets, loaded);
+            _pipeline.RequestGenerate(_worldId, Identifier, GeneratorId, _tickets, loaded);
         }
 
         return ticket;
