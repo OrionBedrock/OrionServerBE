@@ -1,6 +1,7 @@
 using Orion.Config;
 using Orion.Network;
 using Orion.Region;
+using Orion.Runtime;
 using RakNet;
 
 namespace Orion;
@@ -16,8 +17,9 @@ public sealed class Server : IAsyncDisposable
     private ServerContext? _context;
     private SessionDispatcher? _dispatcher;
     private NetworkServer? _raknet;
+    private OrionThreadPools? _threadPools;
+    private RegionTickScheduler? _regionTickScheduler;
     private CancellationTokenSource? _lifetime;
-    private Task? _tickLoop;
 
     public Server(OrionConfig config)
     {
@@ -34,6 +36,8 @@ public sealed class Server : IAsyncDisposable
     public SessionManager Sessions => _sessions;
 
     public GlobalRegion GlobalRegion => _globalRegion;
+
+    public ThreadPoolBudget? ThreadBudget => _threadPools?.Budget;
 
     public async ValueTask StartAsync(CancellationToken cancellationToken = default)
     {
@@ -55,6 +59,10 @@ public sealed class Server : IAsyncDisposable
             motd: _config.Server.Motd,
             edition: _config.Server.Edition);
 
+        var budget = ThreadPoolBudget.Resolve(_config.Runtime.Threads);
+        _threadPools = new OrionThreadPools(budget);
+        _regionTickScheduler = new RegionTickScheduler(_threadPools, _config.Runtime.Regions.Scheduler);
+
         _sender = new PacketSender(_config);
         _context = new ServerContext(_config, _sessions, _sender, _packetQueue, _workQueue);
         _dispatcher = new SessionDispatcher(_context);
@@ -69,7 +77,11 @@ public sealed class Server : IAsyncDisposable
 
         await _raknet.Start(_lifetime.Token).ConfigureAwait(false);
 
-        _tickLoop = Task.Run(() => RunGlobalRegionTickLoop(_lifetime.Token), CancellationToken.None);
+        _regionTickScheduler.Start(
+            _globalRegion,
+            ExecuteGlobalTick,
+            _config.Server.Orion.TicksPerSecond,
+            _lifetime.Token);
     }
 
     public async ValueTask StopAsync()
@@ -79,16 +91,12 @@ public sealed class Server : IAsyncDisposable
             await _lifetime.CancelAsync().ConfigureAwait(false);
         }
 
-        if (_tickLoop is not null)
-        {
-            try
-            {
-                await _tickLoop.ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-            }
-        }
+        _regionTickScheduler?.Stop();
+        _regionTickScheduler?.Dispose();
+        _regionTickScheduler = null;
+
+        _threadPools?.Dispose();
+        _threadPools = null;
 
         _raknet?.Stop();
         _raknet?.Dispose();
@@ -96,7 +104,6 @@ public sealed class Server : IAsyncDisposable
 
         _lifetime?.Dispose();
         _lifetime = null;
-        _tickLoop = null;
         _dispatcher = null;
         _context = null;
         _sender = null;
@@ -107,33 +114,9 @@ public sealed class Server : IAsyncDisposable
         await StopAsync().ConfigureAwait(false);
     }
 
-    private void RunGlobalRegionTickLoop(CancellationToken cancellationToken)
-    {
-        var interval = TickTiming.Interval(_config.Server.Orion.TicksPerSecond);
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            var started = Environment.TickCount64;
-            try
-            {
-                _globalRegion.RunTick(ExecuteGlobalTick);
-            }
-            catch (Exception)
-            {
-                // Keep the host alive; detailed logging arrives in a later phase.
-            }
-
-            var elapsed = Environment.TickCount64 - started;
-            var remaining = interval.TotalMilliseconds - elapsed;
-            if (remaining > 0)
-            {
-                Thread.Sleep((int)remaining);
-            }
-        }
-    }
-
     private void ExecuteGlobalTick()
     {
-        // Folia check: session drain + RakNet timers run on the global region tick thread.
+        // Folia check: session drain + RakNet timers run on the global region tick thread (RegionTick pool).
         _globalRegion.Drain();
         _raknet?.Tick();
         _dispatcher?.Drain();
