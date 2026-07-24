@@ -53,6 +53,59 @@ public sealed class RegionScheduler
         return region.SchedulerTasks.Enqueue(action, initialDelayTicks, periodTicks);
     }
 
+    /// <summary>
+    /// Runs <paramref name="action"/> on the owning region tick; completes after drain.
+    /// Fast-path: if already on that region's tick thread, runs inline.
+    /// </summary>
+    public Task RunAsync(string worldId, int chunkX, int chunkZ, Action action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        return RunAsync(worldId, chunkX, chunkZ, () =>
+        {
+            action();
+            return true;
+        });
+    }
+
+    /// <summary>
+    /// Runs <paramref name="action"/> on the owning region tick and returns its result after drain.
+    /// </summary>
+    public Task<T> RunAsync<T>(string worldId, int chunkX, int chunkZ, Func<T> action)
+    {
+        _ = worldId;
+        ArgumentNullException.ThrowIfNull(action);
+        ChunkRegion region = RequireRegion(chunkX, chunkZ);
+
+        if (region.IsCurrentTickThread)
+        {
+            try
+            {
+                return Task.FromResult(action());
+            }
+            catch (Exception ex)
+            {
+                return Task.FromException<T>(ex);
+            }
+        }
+
+        var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+        region.SchedulerTasks.Enqueue(
+            () =>
+            {
+                try
+                {
+                    tcs.TrySetResult(action());
+                }
+                catch (Exception ex)
+                {
+                    tcs.TrySetException(ex);
+                }
+            },
+            delayTicks: 0);
+
+        return tcs.Task;
+    }
+
     private ChunkRegion RequireRegion(int chunkX, int chunkZ)
     {
         ChunkRegion? region = _regionizer.GetRegionAt(chunkX, chunkZ);
