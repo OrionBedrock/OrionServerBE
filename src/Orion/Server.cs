@@ -2,6 +2,7 @@ using Orion.Config;
 using Orion.Network;
 using Orion.Region;
 using Orion.Runtime;
+using Orion.Scheduler;
 using RakNet;
 
 namespace Orion;
@@ -13,6 +14,7 @@ public sealed class Server : IAsyncDisposable
     private readonly SessionPacketQueue _packetQueue = new();
     private readonly SessionWorkQueue _workQueue = new();
     private readonly GlobalRegion _globalRegion = new();
+    private readonly GlobalRegionScheduler _globalScheduler;
     private Regionizer? _regionizer;
     private PacketSender? _sender;
     private ServerContext? _context;
@@ -26,6 +28,7 @@ public sealed class Server : IAsyncDisposable
     {
         _config = config;
         Name = config.Server.Name;
+        _globalScheduler = new GlobalRegionScheduler(_globalRegion);
     }
 
     public string Name { get; }
@@ -37,6 +40,8 @@ public sealed class Server : IAsyncDisposable
     public SessionManager Sessions => _sessions;
 
     public GlobalRegion GlobalRegion => _globalRegion;
+
+    public GlobalRegionScheduler GlobalScheduler => _globalScheduler;
 
     /// <summary>
     /// Chunk section regionizer (idle until world/tickets land in later phases).
@@ -124,7 +129,8 @@ public sealed class Server : IAsyncDisposable
 
     private void ExecuteGlobalTick()
     {
-        // Folia check: session drain + RakNet timers run on the global region tick thread (RegionTick pool).
+        // Folia check: global scheduler → session drain + RakNet timers on the global tick thread.
+        _globalScheduler.Tick();
         _globalRegion.Drain();
         _raknet?.Tick();
         _dispatcher?.Drain();
