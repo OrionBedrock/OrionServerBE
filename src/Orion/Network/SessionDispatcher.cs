@@ -107,6 +107,10 @@ public sealed class SessionDispatcher
             case PacketId.ResourcePackClientResponse:
                 ResourcePackClientResponseHandler.Handle(_context, session, (ResourcePackClientResponsePacket)packet);
                 break;
+
+            case PacketId.RequestChunkRadius:
+                RequestChunkRadiusHandler.Handle(_context, session, (RequestChunkRadiusPacket)packet);
+                break;
         }
     }
 }
