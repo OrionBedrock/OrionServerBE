@@ -9,7 +9,7 @@ namespace Orion.Network;
 
 /// <summary>
 /// Thin codec over Orion.Protocol framing and packet serialization.
-/// Folia check: decode on the I/O thread only produces DTOs; enqueue to a region happens in Phase 03.
+/// Folia check: decode on the I/O thread only produces DTOs; session drain enqueues work for tick (global/region later).
 /// </summary>
 public static class GamePacketCodec
 {
@@ -78,21 +78,31 @@ public static class GamePacketCodec
         Span<byte> destination,
         CompressionMethod compression,
         int compressionThreshold)
+        => Encode([packet], destination, compression, compressionThreshold);
+
+    public static int Encode(
+        IReadOnlyList<DataPacket> packets,
+        Span<byte> destination,
+        CompressionMethod compression,
+        int compressionThreshold)
     {
         byte[] packetBuffer = ArrayPool<byte>.Shared.Rent(256 * 1024);
         byte[] batchBuffer = ArrayPool<byte>.Shared.Rent(256 * 1024);
 
         try
         {
-            int packetOffset = 0;
-            BinaryWriter packetWriter = new(packetBuffer, ref packetOffset);
-            Packet.Serialize(packet, packetWriter);
-            ReadOnlySpan<byte> packetBytes = packetWriter.GetProcessedBytes();
-
             int batchOffset = 0;
             BinaryWriter batchWriter = new(batchBuffer, ref batchOffset);
-            batchWriter.WriteVarUInt((uint)packetBytes.Length);
-            batchWriter.WriteBytes(packetBytes);
+
+            foreach (DataPacket packet in packets)
+            {
+                int packetOffset = 0;
+                BinaryWriter packetWriter = new(packetBuffer, ref packetOffset);
+                Packet.Serialize(packet, packetWriter);
+                int packetLength = packetOffset;
+                batchWriter.WriteVarUInt((uint)packetLength);
+                batchWriter.WriteBytes(packetBuffer.AsSpan(0, packetLength));
+            }
 
             return Packet.Frame(batchWriter.GetProcessedBytes(), destination, compression, compressionThreshold);
         }

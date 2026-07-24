@@ -1,4 +1,5 @@
 using Orion.Config;
+using Orion.Network;
 using RakNet;
 
 namespace Orion;
@@ -6,6 +7,11 @@ namespace Orion;
 public sealed class Server : IAsyncDisposable
 {
     private readonly OrionConfig _config;
+    private readonly SessionManager _sessions = new();
+    private readonly SessionPacketQueue _packetQueue = new();
+    private PacketSender? _sender;
+    private ServerContext? _context;
+    private SessionDispatcher? _dispatcher;
     private NetworkServer? _raknet;
     private CancellationTokenSource? _lifetime;
     private Task? _tickLoop;
@@ -21,6 +27,8 @@ public sealed class Server : IAsyncDisposable
     public OrionConfig Config => _config;
 
     public NetworkServer? RakNet => _raknet;
+
+    public SessionManager Sessions => _sessions;
 
     public async ValueTask StartAsync(CancellationToken cancellationToken = default)
     {
@@ -42,13 +50,17 @@ public sealed class Server : IAsyncDisposable
             motd: _config.Server.Motd,
             edition: _config.Server.Edition);
 
+        _sender = new PacketSender(_config);
+        _context = new ServerContext(_config, _sessions, _sender, _packetQueue);
+        _dispatcher = new SessionDispatcher(_context);
+
         _raknet = new NetworkServer(options);
         _lifetime = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-        // Folia check: RakNet I/O stays off world mutation paths. Tick only drains RakNet timers/acks.
-        _raknet.OnConnected += _ => { };
-        _raknet.OnDisconnected += _ => { };
-        _raknet.OnMessage += (_, _) => { };
+        // Folia check: RakNet I/O only creates sessions / enqueues bytes. Drain runs on the tick loop.
+        _raknet.OnConnected += connection => _sessions.Create(connection);
+        _raknet.OnDisconnected += connection => _sessions.Remove(connection);
+        _raknet.OnMessage += (connection, payload) => _packetQueue.Enqueue(connection, payload);
 
         await _raknet.Start(_lifetime.Token).ConfigureAwait(false);
 
@@ -80,6 +92,9 @@ public sealed class Server : IAsyncDisposable
         _lifetime?.Dispose();
         _lifetime = null;
         _tickLoop = null;
+        _dispatcher = null;
+        _context = null;
+        _sender = null;
     }
 
     public async ValueTask DisposeAsync()
@@ -96,6 +111,8 @@ public sealed class Server : IAsyncDisposable
             try
             {
                 _raknet?.Tick();
+                // Folia check: session drain is the Phase 03 stand-in for global/region schedule.
+                _dispatcher?.Drain();
             }
             catch (Exception)
             {
