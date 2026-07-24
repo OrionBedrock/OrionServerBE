@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using Orion.Entity.Traits;
 using Orion.Network;
+using Orion.Player.Traits;
 using Orion.Region;
 using Orion.World;
 using EntityHandle = Orion.Entity.Entity;
@@ -123,6 +124,10 @@ public sealed class Player
             }
 
             region.DrainSchedulerTasks();
+            if (Entity.Traits.TryGet(out PlayerChunkStreamingTrait? streaming) && streaming is not null)
+            {
+                streaming.Tick();
+            }
         }
         finally
         {

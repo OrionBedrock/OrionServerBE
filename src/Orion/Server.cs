@@ -1,6 +1,7 @@
 using Orion.Config;
 using Orion.Network;
 using Orion.Player;
+using Orion.Player.Traits;
 using Orion.Region;
 using Orion.Runtime;
 using Orion.Scheduler;
@@ -108,6 +109,7 @@ public sealed class Server : IAsyncDisposable
             _persistence);
 
         _sender = new PacketSender(_config);
+        PacketSendGate.Bind(_sender);
         _context = new ServerContext(
             _config,
             _sessions,

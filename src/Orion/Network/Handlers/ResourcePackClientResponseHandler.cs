@@ -3,6 +3,7 @@ using Orion.Protocol.Enums;
 using Orion.Protocol.Io;
 using Orion.Protocol.Packets;
 using Orion.Player;
+using Orion.Player.Traits;
 
 namespace Orion.Network.Handlers;
 
@@ -77,5 +78,9 @@ public static class ResourcePackClientResponseHandler
             dimConfig);
 
         PlayerSpawnPipeline.SendSpawnSequence(context, player);
+
+        PacketSendGate.Bind(context.Sender);
+        PlayerChunkStreamingTrait streaming = player.Entity.Traits.GetOrAdd(_ => new PlayerChunkStreamingTrait(player));
+        streaming.Start();
     }
 }
