@@ -44,6 +44,7 @@ public sealed class Server : IOrionServer, IAsyncDisposable
     private ServerContext? _context;
     private SessionDispatcher? _dispatcher;
     private NetworkServer? _raknet;
+    private Task? _raknetReceiveLoop;
     private OrionThreadPools? _threadPools;
     private RegionTickScheduler? _regionTickScheduler;
     private CancellationTokenSource? _lifetime;
@@ -177,7 +178,28 @@ public sealed class Server : IOrionServer, IAsyncDisposable
         };
         _raknet.OnMessage += (connection, payload) => _packetQueue.Enqueue(connection, payload);
 
-        await _raknet.Start(_lifetime.Token).ConfigureAwait(false);
+        // NetworkServer.Start binds then runs the UDP receive loop until cancelled.
+        _raknetReceiveLoop = _raknet.Start(_lifetime.Token).AsTask();
+        long bindDeadline = Environment.TickCount64 + 5_000;
+        while (_raknet.LocalEndPoint is null && !_raknetReceiveLoop.IsCompleted)
+        {
+            if (Environment.TickCount64 >= bindDeadline)
+            {
+                throw new TimeoutException("RakNet failed to bind within timeout.");
+            }
+
+            await Task.Delay(10, cancellationToken).ConfigureAwait(false);
+        }
+
+        if (_raknetReceiveLoop.IsFaulted)
+        {
+            await _raknetReceiveLoop.ConfigureAwait(false);
+        }
+
+        if (_raknet.LocalEndPoint is null)
+        {
+            throw new InvalidOperationException("RakNet started but LocalEndPoint is null.");
+        }
 
         _regionTickScheduler.Start(
             _globalRegion,
@@ -229,6 +251,20 @@ public sealed class Server : IOrionServer, IAsyncDisposable
         _regionScheduler = null;
 
         _raknet?.Stop();
+        if (_raknetReceiveLoop is not null)
+        {
+            try
+            {
+                await _raknetReceiveLoop.WaitAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+            }
+            catch
+            {
+                // Best-effort drain of the receive loop after Stop/cancel.
+            }
+
+            _raknetReceiveLoop = null;
+        }
+
         _raknet?.Dispose();
         _raknet = null;
 

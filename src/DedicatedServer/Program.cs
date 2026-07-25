@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Orion;
 using Orion.Config;
 
@@ -24,11 +25,30 @@ var config = OrionConfig.Load(configPath);
 await using var server = new Server(config);
 
 using var cts = new CancellationTokenSource();
+void RequestStop()
+{
+    try
+    {
+        cts.Cancel();
+    }
+    catch (ObjectDisposedException)
+    {
+    }
+}
+
 Console.CancelKeyPress += (_, e) =>
 {
     e.Cancel = true;
-    cts.Cancel();
+    RequestStop();
 };
+
+using PosixSignalRegistration? sigTerm = OperatingSystem.IsWindows()
+    ? null
+    : PosixSignalRegistration.Create(PosixSignal.SIGTERM, ctx =>
+    {
+        ctx.Cancel = true;
+        RequestStop();
+    });
 
 await server.StartAsync(cts.Token).ConfigureAwait(false);
 

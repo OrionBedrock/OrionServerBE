@@ -5,6 +5,7 @@ docs/
 bin/
 obj/
 artifacts/
+publish/
 *.user
 *.suo
 .vs/

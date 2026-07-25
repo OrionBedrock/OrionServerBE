@@ -1,0 +1,47 @@
+name: Linux publish
+
+on:
+  push:
+    branches: [development, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: "10.0.x"
+  PUBLISH_DIR: ./publish/OrionServer-linux-x64
+
+jobs:
+  linux-x64:
+    name: Test, publish, smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Test
+        run: dotnet test OrionServer.slnx -c Release
+
+      - name: Publish linux-x64
+        run: >
+          dotnet publish src/DedicatedServer/DedicatedServer.csproj
+          -c Release
+          -r linux-x64
+          -o ${{ env.PUBLISH_DIR }}
+
+      - name: Strip PDBs from artifact
+        run: find ${{ env.PUBLISH_DIR }} -name '*.pdb' -delete
+
+      - name: Smoke boot
+        run: bash scripts/smoke-boot.sh ${{ env.PUBLISH_DIR }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OrionServer-linux-x64
+          path: ${{ env.PUBLISH_DIR }}
